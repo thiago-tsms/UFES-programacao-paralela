@@ -8,6 +8,6 @@ Para executar o programa: <br/>
     <li>execução: sh run.sh</li>
 </ul>
 
-Para adiferentes parâmetros altere o script
+Para diferentes parâmetros altere o script
 
 Colab: https://colab.research.google.com/drive/1O5kP5IiOXUDI-Jcwl8j3blBKsdyk-Oe4?usp=share_link
