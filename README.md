@@ -1,6 +1,6 @@
 # LABORATÓRIO I
 
-## Problema de ordenação de um vetor executado com diferente número de threads
+### Problema de ordenação de um vetor executado com diferente número de threads
 
 Para executar o programa: <br/>
 <ul>
