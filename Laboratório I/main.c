@@ -58,8 +58,14 @@ void main(int argc, char *argv[]){
     printf("Iniciando ordenação elementos: %ld, n_processos: %ld \n", n_elementos, n_processos);
 
     interval_p *intervalos = separa_intervalos(n_elementos, n_processos);
+
+        // Faz uso de processos e pipe
     //lancando_processos_ordenacao(v, intervalos, n_elementos, n_processos);
+
+        // Faz uso de threads
     lancando_processos_ordenacao_thread(v, intervalos, n_elementos, n_processos);
+    
+        // Faz uso de threads
     concatena_vetor(v, intervalos, n_elementos, n_processos);
 
     verificar_ordenacao(v, 0, n_elementos);
