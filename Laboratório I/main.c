@@ -99,6 +99,7 @@ interval_p *separa_intervalos(long n, long p){
 }
 
 
+    //selection sort
 void ordenar_vetor(int *v, long ini, long fim){
     long i, j, min, aux;
 
