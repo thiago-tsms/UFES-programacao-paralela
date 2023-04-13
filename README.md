@@ -5,6 +5,7 @@
 Para executar o programa: <br/>
 <ul>
     <li>requisitos (linux): sudo apt-get install time</li>
+    <li>compilação (linux): cc -pthread main.c -o m</li>
     <li>execução: sh run.sh</li>
 </ul>
 
