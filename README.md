@@ -5,7 +5,9 @@
 Para executar o programa: <br/>
 <ul>
     <li>requisitos (linux): sudo apt-get install time</li>
-    <li>execução: sh run.sh</li>
+    <li>compilação (linux): cc -pthread main.c -o m</li>
+    <li>execução: ./m (numero de elementos) (nomero de threads) </li>
+    <li>execução do script: sh run.sh</li>
 </ul>
 
 Para diferentes parâmetros altere o script
