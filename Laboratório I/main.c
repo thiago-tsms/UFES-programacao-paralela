@@ -59,7 +59,7 @@ void main(int argc, char *argv[]){
 
     interval_p *intervalos = separa_intervalos(n_elementos, n_processos);
 
-        // Faz uso de processos e pipe
+        // Faz uso de fork e pipe
     //lancando_processos_ordenacao(v, intervalos, n_elementos, n_processos);
 
         // Faz uso de threads
@@ -127,6 +127,7 @@ void ordenar_vetor(int *v, long ini, long fim){
     printf("finalizando ordenação pid: %d \n", getpid());
 }
 
+    //selection sort
 void *ordenar_vetor_thread(void *arg){
     send_thread_ordena_p *s = (send_thread_ordena_p*) arg;
     long i, j, min, aux, ini = (s->ini_ord), fim = (s->fim_ord);
@@ -150,7 +151,7 @@ void *ordenar_vetor_thread(void *arg){
     printf("finalizando ordenação pid: %d \n", getpid());
 }
 
-
+    // fork e pipe
 void lancando_processos_ordenacao(int *v, interval_p *intervalos, long n, long p){
     process_p *pid_filho = malloc(sizeof(process_p)*p);
     pid_t pid;
@@ -179,7 +180,6 @@ void lancando_processos_ordenacao(int *v, interval_p *intervalos, long n, long p
         ordenar_vetor(v, pid_filho[index].ini, pid_filho[index].fim);
         printf("Escrevendo \n");
 
-        //for(long i = pid_filho[index].ini; i < pid_filho[index].fim; i++) write(pid_filho[index].pipe[1], &(v[i]), (sizeof(int)));
         close(pid_filho[index].pipe[0]);
         write(pid_filho[index].pipe[1], v, (sizeof(int)*n));
         close(pid_filho[index].pipe[1]);
@@ -205,7 +205,6 @@ void lancando_processos_ordenacao(int *v, interval_p *intervalos, long n, long p
 
             printf("Recebendo \n");
 
-            //for(long l = pid_filho[i].ini; l < pid_filho[i].fim; l++) read(pid_filho[l].pipe[0], &(aux[l]), (sizeof(int)));
             close(pid_filho[i].pipe[1]);
             read(pid_filho[i].pipe[0], aux, (sizeof(int)*n));
             close(pid_filho[i].pipe[0]);
@@ -224,6 +223,7 @@ void lancando_processos_ordenacao(int *v, interval_p *intervalos, long n, long p
     free(aux);
 }
 
+    // thread
 void lancando_processos_ordenacao_thread(int *v, interval_p *intervalos, long n, long p){
     pthread_t *threads = malloc(sizeof(pthread_t)*p); 
     send_thread_ordena_p *s = malloc(sizeof(send_thread_ordena_p)*p);
