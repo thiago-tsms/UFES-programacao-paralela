@@ -4,10 +4,10 @@
 
 Para executar o programa: <br/>
 <ul>
-    <li>requisitos (linux): sudo apt-get install time</li>
-    <li>compilação (linux): cc -pthread main.c -o m</li>
-    <li>execução: ./m (numero de elementos) (nomero de threads) </li>
-    <li>execução do script: sh run.sh</li>
+    <li>requisitos: <em>sudo apt-get install time</em></li>
+    <li>compilação: <em>cc -pthread main.c -o m</em></li>
+    <li>execução: <em>./m (numero de elementos) (nomero de threads)</em></li>
+    <li>execução do script: <em>sh run.sh</em></li>
 </ul>
 
 Para diferentes parâmetros altere o script
@@ -23,14 +23,14 @@ Requisitos: **python** e **pip** instalados
 
 Para executar o programa:
 <ul>
-    <li>criar ambiente: *python -m venv .venv*</li>
-    <li>ativando ambiente: *source .venv/bin/activate*</li>
-    <li>configurar ambiente: *pip install -r requirements.txt*</li>
-    <li>para execução: *jupyter notebook*</li>
+    <li>criar ambiente: <em>python -m venv .venv</em></li>
+    <li>ativando ambiente: <em>source .venv/bin/activate</em></li>
+    <li>configurar ambiente: <em>pip install -r requirements.txt</em></li>
+    <li>para execução: <em>jupyter notebook</em></li>
 </ul>
 
 Para executar a simulação:
 <ul>
-    <li>*source .venv/bin/activate*</li>
-    <li>*sh run.sh*</li>
+    <li><em>source .venv/bin/activate</em></li>
+    <li><em>sh run.sh</em></li>
 </ul>
