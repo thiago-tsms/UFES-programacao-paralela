@@ -15,10 +15,17 @@ def define_model(input_shape,num_classes):
     model = Sequential()
     model.add(Conv2D(32, (3, 3), activation='relu', kernel_initializer='he_uniform', input_shape=input_shape))
     model.add(MaxPool2D((2, 2)))
+    
+        # Transforma o array de imagens de (28x28) para (784 [28*28], uma única dimensão)
     model.add(Flatten())
+    
+        # Camada neural densely connected, ou fully connected
     model.add(Dense(100, activation='relu', kernel_initializer='he_uniform'))
+
+        # Camada softmax
     model.add(Dense(num_classes, activation='softmax'))
-    # compile model
+    
+        # Compilando Modelo
     opt = SGD(learning_rate=0.01, momentum=0.9)
     model.compile(optimizer=opt, loss='categorical_crossentropy', metrics=['accuracy'])
     return model
