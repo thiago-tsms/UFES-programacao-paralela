@@ -1,12 +1,15 @@
 
 #!/bin/bash
 
-echo "Starting server"
-python server.py &
-sleep 10  # Aguarda 10s antes de iniciar os clientes
+echo "Iniciando Execução com $1 rounds"
 
-for i in `seq 0 5`; do
-    echo "Starting client $i"
+echo "Iniciando Servidor"
+python server.py $1 &
+
+sleep 3  # Aguarda 10s antes de iniciar os clientes
+
+for i in `seq 1 5`; do
+    echo "Iniciando Cliente: $i"
     python client.py &
 done
 

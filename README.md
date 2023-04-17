@@ -24,13 +24,16 @@ Requisitos: **python** e **pip** instalados
 Para executar o programa:
 <ul>
     <li>criar ambiente: <em>python -m venv .venv</em></li>
-    <li>ativando ambiente: <em>source .venv/bin/activate</em></li>
+    <li>ativar ambiente: <em>source .venv/bin/activate</em></li>
     <li>configurar ambiente: <em>pip install -r requirements.txt</em></li>
-    <li>para execução: <em>jupyter notebook</em></li>
+    <li>executar: <em>jupyter notebook</em></li>
 </ul>
 
 Para executar a simulação:
 <ul>
     <li><em>source .venv/bin/activate</em></li>
-    <li><em>sh run.sh</em></li>
+    <li><em>sh run.sh (número de rounds)</em></li>
+    <li>para a simulação completa: <em>sh run_all.sh</em></li>
 </ul>
+
+São usados 5 cliente e um servidor
