@@ -31,9 +31,12 @@ Para executar o programa:
 
 Para executar a simulação:
 <ul>
-    <li><em>source .venv/bin/activate</em></li>
-    <li><em>sh run.sh (número de rounds)</em></li>
-    <li>para a simulação completa: <em>sh run_all.sh</em></li>
+    <li>ativar ambiente virtual: <em>source .venv/bin/activate</em></li>
+    <li>executar um teste com *n* ronds: <em>sh run.sh (número de rounds)</em></li>
+    <li>executar teste com (2, 5, 10, 20, 40) rounds: <em>sh run_all.sh</em></li>
 </ul>
 
 São usados 5 cliente e um servidor
+
+
+# LABORATÓRIO III
