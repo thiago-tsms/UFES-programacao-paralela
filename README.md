@@ -40,3 +40,11 @@ São usados 5 cliente e um servidor
 
 
 # LABORATÓRIO III
+
+Requisitos: **python** e **pip** instalados
+
+<ul>
+    <li>criar ambiente: <em>python -m venv .venv</em></li>
+    <li>ativar ambiente: <em>source .venv/bin/activate</em></li>
+    <li>configurar ambiente: <em>pip install -r requirements.txt</em></li>
+</ul>
