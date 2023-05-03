@@ -26,7 +26,7 @@ message void {
 }
 
 service api {
-    rpc getTransactionId(void) returns (intResult);
+    rpc getTransactionId(null) returns (intResult);
     rpc getChallenge(transactionId) returns (intResult);
     rpc getTransactionStatus(transactionId) returns (intResult);
     rpc submitChallenge(challengeArgs) returns (intResult);

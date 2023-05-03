@@ -47,4 +47,5 @@ Requisitos: **python** e **pip** instalados
     <li>criar ambiente: <em>python -m venv .venv</em></li>
     <li>ativar ambiente: <em>source .venv/bin/activate</em></li>
     <li>configurar ambiente: <em>pip install -r requirements.txt</em></li>
+    <li>Ubuntu: <em>sudo apt-get install python3-tk</em></li>
 </ul>

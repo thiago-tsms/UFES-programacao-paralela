@@ -1,33 +1,41 @@
 import grpc
-import mine_grpc_pb2_grpc
 import mine_grpc_pb2
+import mine_grpc_pb2_grpc
 
 import tkinter as tk
 
 
 def getTransactionID(client):
-    res = client.add(mine_grpc_pb2.getTransactionId())
-    print(f'ID da transação: {res.intResult}')
-
+    try:
+        res = client.getTransactionId(mine_grpc_pb2.void())
+        print(f'ID da transação: {res.result}')
+    except:
+        print(f'Erro: getTransactionID')
+    
 def getChallenge(client):
-    res = client.add(mine_grpc_pb2.getChallenge())
-    print(f'Resultado: {res.intResult}')
+    res = client.getChallenge(mine_grpc_pb2.transactionId())
+    print(f'Resultado: {res.result}')
 
 def getTransactionStatus(client):
-    res = client.add(mine_grpc_pb2.getTransactionStatus())
-    print(f'Resultado: {res.intResult}')
+    res = client.getTransactionStatus(mine_grpc_pb2.transactionId())
+    print(f'Resultado: {res.result}')
 
 def getWinner(client):
-    res = client.add(mine_grpc_pb2.getWinner())
-    print(f'Resultado: {res.intResult}')
+    res = client.getWinner(mine_grpc_pb2.transactionId())
+    print(f'Resultado: {res.result}')
 
 def GetSolucion(client):
-    res = client.add(mine_grpc_pb2.GetSolucion())
-    print(f'Resultado: {res.intResult}')
+    res = client.GetSolucion(mine_grpc_pb2.transactionId())
+    print(f'Resultado: {res.result}')
 
 def getSolucion(client):
-    res = client.add(mine_grpc_pb2.GetSolucion())
-    print(f'Resultado: {res.intResult}')
+    res = client.getSolucion(mine_grpc_pb2.transactionId())
+    
+    status = res.status
+    result = res.result
+    challenge = res.challenge
+    
+    print(f'Resultado: {status} - {result} - {challenge}')
 
 def mine(client):
     #res = client.add(mine_grpc_pb2.GetSolucion())
@@ -37,7 +45,7 @@ def mine(client):
 def run():
     channel = grpc.insecure_channel('localhost:8080')
     client = mine_grpc_pb2_grpc.apiStub(channel)
-
+    
     opcoes = [
         ("getTransactionID", lambda: getTransactionID(client)),
         ("getChallenge", lambda: getChallenge(client)),
