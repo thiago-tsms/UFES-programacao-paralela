@@ -1,6 +1,7 @@
 import grpc
 import mine_grpc_pb2
 import mine_grpc_pb2_grpc
+from resolucao import Resolucao
 
 import tkinter as tk
 
@@ -9,6 +10,7 @@ transaction_id = 0
 challenge = 0
 status = 0
 seed = 0
+solution = ''
 
 def leitura(input):
     try:
@@ -20,6 +22,14 @@ def leitura(input):
     finally:
         input.delete(0, tk.END)
 
+def espaco(tipo):
+    txt = ''
+    for i in range(0, 22):
+        if(tipo == 0):
+            txt += '='
+        elif(tipo == 1):
+            txt += '-'
+    print(txt)
 
 def getTransactionID(client, input):
     try:
@@ -83,11 +93,11 @@ def getSolution(client, input):
     if(id == -1):
         return
 
-    # try:
-    #     res = client.getSolucion(mine_grpc_pb2.transactionId(transactionId=id))
-    #     print(f'Status: {res.status} \nDesafio: {res.challenge} \n Resultado: {res.result}')
-    # except:
-    #     print(f'Erro: getSolucion')
+    try:
+        res = client.getSolucion(mine_grpc_pb2.transactionId(transactionId=id))
+        print(f'Status: {res.status} \nDesafio: {res.challenge} \n Resultado: {res.result}')
+    except:
+        print(f'Erro: getSolucion')
 
     res = client.getSolution(mine_grpc_pb2.transactionId(transactionId=id))
     print(f'Status: {res.status} \nDesafio: {res.challenge} \n Resultado: {res.result}')
@@ -95,16 +105,33 @@ def getSolution(client, input):
 
 def mine(client, input):
     try:
+        rs = Resolucao()
+        sl = ''
         id = client.getTransactionId(mine_grpc_pb2.void()).result
         challenge = client.getChallenge(mine_grpc_pb2.transactionId(transactionId=id)).result
         status = client.getTransactionStatus(mine_grpc_pb2.transactionId(transactionId=id)).result
         
+        espaco(0)
         print(f'ID transação: {id} \nDesafio: {challenge} \nStatus: {status}')
         
-        #Busca a sulução
-        #Imprime a solução
+        espaco(1)
+        print(f'Buscando Solução ...')
+        while True:
+            (hash, seed) = rs.gerar_hash()
+            if (rs.busca_solucao(challenge, hash)):
+                break
+
+            #Imprime a solução
+        espaco(1)
+        print(f'Solução: {seed}')
+        
         result = client.submitChallenge(mine_grpc_pb2.challengeArgs(transactionId=id, clientId=client_id, seed=seed))
-        #imprime result
+        
+            #imprime result
+        espaco(1)
+        print(f'Resultado: {result.result}')
+        espaco(0)
+        
     except:
         print(f'Erro: mine')
 

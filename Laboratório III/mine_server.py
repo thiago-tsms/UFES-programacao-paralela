@@ -3,6 +3,7 @@ import mine_grpc_pb2
 import mine_grpc_pb2_grpc
 from concurrent import futures
 import random
+from resolucao import Resolucao
 
 class ApiServicer(mine_grpc_pb2_grpc.apiServicer):
     transaction_id = 0
@@ -42,9 +43,16 @@ class ApiServicer(mine_grpc_pb2_grpc.apiServicer):
 
         if(self.transaction_id != transaction_id):
             return mine_grpc_pb2.intResult(result=(-1))
+        
+        elif (self.solution != ''):
+            return mine_grpc_pb2.intResult(result=(2))
+        
         else:
-            print(f'Efetua o teste de verificação.')
-            return mine_grpc_pb2.intResult(result=0)
+            rs = Resolucao()
+            if(rs.avalia_solucao(soluction, self.challenge)):
+                return mine_grpc_pb2.intResult(result=1)
+            else:
+                return mine_grpc_pb2.intResult(result=0)
         
             # 1 OK
             # 0 Inválida
