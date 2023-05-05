@@ -1,11 +1,12 @@
 import grpc
 import mine_grpc_pb2
 import mine_grpc_pb2_grpc
-from resolucao import Resolucao
+#from resolucao import Resolucao
+from resolucao import inicia_busca
 
 import tkinter as tk
 
-client_id = 0
+client_id = 20
 transaction_id = 0
 challenge = 0
 status = 0
@@ -94,18 +95,14 @@ def getSolution(client, input):
         return
 
     try:
-        res = client.getSolucion(mine_grpc_pb2.transactionId(transactionId=id))
-        print(f'Status: {res.status} \nDesafio: {res.challenge} \n Resultado: {res.result}')
+        res = client.getSolution(mine_grpc_pb2.transactionId(transactionId=id))
+        print(f'Status: {res.status} \nDesafio: {res.challenge} \nSolução: {res.result}')
     except:
         print(f'Erro: getSolucion')
 
-    res = client.getSolution(mine_grpc_pb2.transactionId(transactionId=id))
-    print(f'Status: {res.status} \nDesafio: {res.challenge} \n Resultado: {res.result}')
-
-
 def mine(client, input):
     try:
-        rs = Resolucao()
+        #rs = Resolucao()
         sl = ''
         id = client.getTransactionId(mine_grpc_pb2.void()).result
         challenge = client.getChallenge(mine_grpc_pb2.transactionId(transactionId=id)).result
@@ -115,15 +112,17 @@ def mine(client, input):
         print(f'ID transação: {id} \nDesafio: {challenge} \nStatus: {status}')
         
         espaco(1)
-        print(f'Buscando Solução ...')
-        while True:
-            (hash, seed) = rs.gerar_hash()
-            if (rs.busca_solucao(challenge, hash)):
-                break
+        print(f'Buscando Semente ...')
+        (hash, seed) = inicia_busca(challenge, 4)
+
+        # while True:
+        #     (hash, seed) = rs.gerar_hash()
+        #     if (rs.busca_solucao(challenge, hash)):
+        #         break
 
             #Imprime a solução
         espaco(1)
-        print(f'Solução: {seed}')
+        print(f'Semente: {seed}')
         
         result = client.submitChallenge(mine_grpc_pb2.challengeArgs(transactionId=id, clientId=client_id, seed=seed))
         

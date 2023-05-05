@@ -1,16 +1,23 @@
 import hashlib
 import random
+from threading import Thread
+from multiprocessing import Queue
+from events import Events
+import time
 
 class Resolucao:
     def gerar_hash(self):
-        value = random.randint(0, 2147483647)
-        hash = hashlib.sha1(value.to_bytes(32, byteorder="big"))
+        seed = random.randint(0, 2147483647)
+        hash = hashlib.sha1(seed.to_bytes(32, byteorder="big"))
         
-        return (int(hash.hexdigest(), 16), value)
+        return (int(hash.hexdigest(), 16), seed)
         
         #print(hash.hexdigest())
+
+    def gerar_hash_str(self, seed):
+        return hashlib.sha1(seed.to_bytes(32, byteorder="big")).hexdigest()
     
-    def busca_solucao(self, n, hash):
+    def testa_solucao(self, n, hash):
         mask = 0
         for i in range((20*8 -1), (20*8 -1 -n), -1):
             mask += 2**i
@@ -26,8 +33,8 @@ class Resolucao:
         else:
             return False
     
-    def avalia_solucao(self, value, n):
-        hash = hashlib.sha1(value.to_bytes(32, byteorder="big"))
+    def avalia_solucao(self, seed, n):
+        hash = hashlib.sha1(seed.to_bytes(32, byteorder="big"))
         hash = int(hash.hexdigest(), 16)
         mask = 0
         for i in range((20*8 -1), (20*8 -1 -n), -1):
@@ -40,30 +47,39 @@ class Resolucao:
         else:
             return False
 
+def inicia_busca(challenge, n_threads):
+    threads = []
+    event = Events()
 
-def teste(n, hash):
-    mask = 0
-    for i in range(31, (31-n), -1):
-        mask += 2**i
+    q = Queue()
+    for i in range(0, n_threads):
+        threads.append(Thread(target=thread_function, args=(event, challenge, q)))
 
-    if (hash & mask) == 0:
-        return True
-    else:
-        return False
+    [tr.start() for tr in threads]
+
+    (hash, seed) = q.get()
+
+    event.set()
+    time.sleep(0.001)
 
 
-# if __name__ == '__main__':
-#     res = Resolucao()
-    
-#     solution = 0
-#     n = 8
-#     count = 0
-    
-#     while(solution == 0):
-#         count += 1
-#         (hash, value) = res.gerar_hash()
-#         if res.busca_solucao(n, hash) == True:
-#             solution = value
-    
-#     print(f'Solução: {value}')
-#     print(f'Solução avaliada: {res.avalia_solucao(value, n)} - Tentativas: {count}')
+    #[tr.join() for tr in threads]
+
+    #q.close()
+
+    return (hash, seed)
+
+
+def thread_function(event, challenge, q):
+    rs = Resolucao()
+
+    while True:
+        (hash, seed) = rs.gerar_hash()
+
+        if(rs.testa_solucao(challenge, hash)):
+            if(event.is_set()):
+                return
+            else:
+                q.put((hash, seed))
+                return
+               
