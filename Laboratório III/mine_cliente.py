@@ -1,3 +1,4 @@
+import sys
 import grpc
 import mine_grpc_pb2
 import mine_grpc_pb2_grpc
@@ -136,7 +137,15 @@ def mine(client, input):
 
 
 def run():
-    channel = grpc.insecure_channel('localhost:8080')
+
+    try:
+        path = sys.argv[1]
+        print(f'Buscando server no esndereço: {path}')
+    except:
+        path = 'localhost:8080'
+        print(f'IP:Portta do server não informado server. \nBuscando server no endereço default: {path}')
+
+    channel = grpc.insecure_channel(path)
     client = mine_grpc_pb2_grpc.apiStub(channel)
 
     page = tk.Tk()
