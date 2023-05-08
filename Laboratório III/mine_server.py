@@ -50,13 +50,13 @@ class ApiServicer(mine_grpc_pb2_grpc.apiServicer):
             return mine_grpc_pb2.intResult(result=(2))
         
         else:
-            print(f'{transaction_id} - {client_id} - {seed}')
+            #print(f'{transaction_id} - {client_id} - {seed}')
 
             rs = Resolucao()
             if(rs.avalia_solucao(seed, self.challenge)):
                 self.winner = client_id
                 self.solution = rs.gerar_hash_str(seed)
-                print(f'Debug: {client_id} -- {rs.gerar_hash_str(seed)}')
+                #print(f'Debug: {client_id} -- {rs.gerar_hash_str(seed)}')
                 return mine_grpc_pb2.intResult(result=1)
             
             else:
