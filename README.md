@@ -12,7 +12,7 @@ Para executar o programa: <br/>
 
 Para diferentes parâmetros altere o script
 
-Colab: https://colab.research.google.com/drive/1O5kP5IiOXUDI-Jcwl8j3blBKsdyk-Oe4?usp=share_link
+Colab: https://colab.research.google.com/drive/1O5kP5IiOXUDI-Jcwl8j3blBKsdyk-Oe4?usp=sharing
 
 
 # LABORATÓRIO II
