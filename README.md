@@ -41,9 +41,9 @@ São usados 5 cliente e um servidor
 
 # LABORATÓRIO III
 
-Requisitos: **python** e **pip** instalados
-
 ### Experimentar a implementação de sistemas distribuídos baseados na arquitetura Cliente/Servidor, usando o conceito de Chamada de Procedimento Remoto (RPC)
+
+Requisitos: **python** e **pip** instalados
 
 Para executar a simulação:
 <ul>
