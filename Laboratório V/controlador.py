@@ -26,9 +26,8 @@ def run():
 
     challenge = random.randint(0, 10)
 
-    client = mqtt.Client("controlado-ufes-lv")
+    client = mqtt.Client("controlado-ufes-lv-controlador")
     client.connect("broker.emqx.io")
-    #client.connect("10.9.13.138", 1883)
 
     while True:
         print(f'Enviando')

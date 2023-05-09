@@ -43,6 +43,9 @@ São usados 5 cliente e um servidor
 
 Requisitos: **python** e **pip** instalados
 
+### Experimentar a implementação de sistemas distribuídos baseados na arquitetura Cliente/Servidor, usando o conceito de Chamada de Procedimento Remoto (RPC)
+
+Para executar a simulação:
 <ul>
     <li>criar ambiente: <em>python -m venv .venv</em></li>
     <li>ativar ambiente: <em>source .venv/bin/activate</em></li>
@@ -55,3 +58,15 @@ Requisitos: **python** e **pip** instalados
 
 
 # LABORATÓRIO V
+
+### Experimentar a implementação de sistemas de comunicação indireta por meio de middleware Publish/Subscribe (Pub/Sub) e Filas de Mensagens (Message Queues) com uso do broker EMQX MQTT para resolução de provas de trabalho
+
+Requisitos: **python** e **pip** instalados
+
+Para executar a simulação:
+<ul>
+    <li>criar ambiente: <em>python -m venv .venv</em></li>
+    <li>ativar ambiente: <em>source .venv/bin/activate</em></li>
+    <li>configurar ambiente: <em>pip install -r requirements.txt</em></li>
+    <li>Ubuntu: <em>sudo apt-get install python3-tk</em></li>
+</ul>
