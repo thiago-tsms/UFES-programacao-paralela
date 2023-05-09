@@ -49,3 +49,6 @@ Requisitos: **python** e **pip** instalados
     <li>configurar ambiente: <em>pip install -r requirements.txt</em></li>
     <li>Ubuntu: <em>sudo apt-get install python3-tk</em></li>
 </ul>
+
+
+# Trabalho
