@@ -27,7 +27,7 @@ class InterfaceControlador:
         #self.input.pack(padx=10, pady=10)
         
    
-    # Inicia o loo
+    # Inicia o loop
     def start_loop(self):
         print(f'== Inicialização Completa ==')
         self.page.mainloop()
@@ -46,5 +46,31 @@ class InterfaceControlador:
 
 class InterfaceMinerador:
     
-    def __init__(self):
-        print('Inicia')
+    def __init__(self, params):
+        print(f'* Iniciando Interface')
+        
+        self.params = params
+        
+        self.page = tk.Tk()
+        
+        self.opcoes = [
+            #("newChallenge", self.newChallenge),
+            ("exitController", self.exitController),
+        ]
+        
+        self.page.title('Broker - Minerador')
+        
+        tk.Label(self.page)
+        tk.Label(self.page, text="Selecione uma das opções", justify=tk.LEFT, padx=10, pady=10, font=15).pack()
+        [tk.Button(self.page, text=txt, command=func, width=50, pady=5, padx=15, justify=tk.CENTER).pack(anchor=tk.W) for (txt, func) in self.opcoes]
+
+
+   # Inicia o loop
+    def start_loop(self):
+        print(f'== Inicialização Completa ==')
+        self.page.mainloop()
+        
+    
+    def exitController(self):
+        print(f'* Finalizando Interface')
+        self.page.destroy()
