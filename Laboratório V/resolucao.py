@@ -45,12 +45,13 @@ class ProvaTrabalho:
             return False
     
     
-    # Efetua uma busca até obter uma solução para o hash
+    # Efetua uma busca até obter uma solução para o desafio
     def buscar_solucao(self, challenger):
         threads = []
         event = Events()
         queue = Queue()
         
+        # Executa a busca em 4 threads
         [threads.append(Thread(target=self.thread, args=(queue, event, challenger,))) for _ in range(4)]
         [tr.start() for tr in threads]
         

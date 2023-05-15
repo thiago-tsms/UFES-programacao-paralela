@@ -33,12 +33,12 @@ class InterfaceControlador:
         self.page.mainloop()
     
     
-    # Botão
+    # Botão: Cria novo desafio
     def newChallenge(self):
         self.newChallenge_func(self.params)
     
     
-    # Botão: sair da tela
+    # Botão: Fechar programa
     def exitController(self):
         print(f'* Finalizando Interface')
         self.page.destroy()
@@ -54,7 +54,6 @@ class InterfaceMinerador:
         self.page = tk.Tk()
         
         self.opcoes = [
-            #("newChallenge", self.newChallenge),
             ("exitController", self.exitController),
         ]
         
@@ -71,6 +70,7 @@ class InterfaceMinerador:
         self.page.mainloop()
         
     
+    # Botão: Fechar programa
     def exitController(self):
         print(f'* Finalizando Interface')
         self.page.destroy()
