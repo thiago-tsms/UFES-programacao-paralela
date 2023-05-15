@@ -2,6 +2,7 @@ import paho.mqtt.client as mqtt
 import random
 from interface import InterfaceControlador
 import json
+from resolucao import ProvaTrabalho
         
 
 # Parâmetros (em classe para compartilha-los)
@@ -12,18 +13,18 @@ class Params:
         self.solution = 0           # string que se aplicada a solução resolvera o desafio
         self.winer = 0              # id do minirador que resolveu (-1: o desafio não foi resolvido)
         
-        self.client = None
-
 
 fila_solution = "sd/lab5/solution"
 fila_challenge = 'sd/lab5/challenge'
 fila_result = 'sd/lab5/result'
 
 
-def inicia_mqtt():
+def inicia_mqtt(params):
     print(f'* Iniciando MQTT')
+
+    client_userdata = {'params':params}
     
-    client = mqtt.Client("controlado-ufes-lv-controlador")
+    client = mqtt.Client("controlado-ufes-lv-controlador", userdata=client_userdata)
     client.connect("broker.emqx.io")
     
     # Subscreve em tópicos
@@ -57,9 +58,36 @@ def gerar_novo_desafio(params):
     
 
 def ouvindo_broker(client, userdata, msg):
+
+    params = userdata['params']
+    pt = ProvaTrabalho()
     
     if msg.topic == fila_solution:
-        print(f'{str(msg.payload.decode("utf-8"))}')
+        print(f'\n* Desafio Recebido')
+
+        msg = json.loads(str(msg.payload.decode("utf-8")))
+        client_id = msg['ClientID']
+        transaction_id = msg['TransactionID']
+        solution = msg['Solution']
+
+        print(f'-- ClientID: {client_id} \n-- TransactionID: {transaction_id}, \n-- Solution: {solution}')
+
+        if params.transaction_id != transaction_id:
+            print(f'- Não exisiste esse desafio')
+        
+        elif params.winer == -1:
+            print('Este desafio já foi solucionado')
+        
+        elif pt.avaliar_hash(params.challenge, pt.gerar_hash(solution)):
+            print(f'* Solução Correta')
+
+            params.winer = client_id
+            params.solution = solution
+        
+        else:
+            print(f'Solução Incorreta')
+        
+        print()
     
         # Verificar solução
         # Se ok, atualizar estados e publicar em: fila_result
@@ -71,7 +99,7 @@ def run():
     params = Params()
     interface = InterfaceControlador(params, gerar_novo_desafio)
     
-    params.client = inicia_mqtt()
+    params.client = inicia_mqtt(params)
     gerar_novo_desafio(params)
     
     interface.start_loop()
