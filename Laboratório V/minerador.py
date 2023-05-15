@@ -52,13 +52,13 @@ def ouvindo_broker(client, userdata, msg):
         params.transaction_id = msg['TransactionID']
         params.challenge = msg['Challenge']
         
-        print(f'-- Desafio Obtido --')
+        print(f'-- Desafio Recebido --')
         print(f'Transação: {params.transaction_id} \nDesafio: {params.challenge}')
         realizando_prova(client, params)
         print(f'--------------------')
         
     elif msg.topic == fila_result:
-        print(f'{str(msg.payload.decode("utf-8"))}')
+        print(f'\n{str(msg.payload.decode("utf-8"))}\n')
 
 
 def realizando_prova(client, params):

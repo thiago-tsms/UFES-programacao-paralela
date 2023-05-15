@@ -35,7 +35,11 @@ class InterfaceControlador:
     
     # Botão
     def newChallenge(self):
-        self.newChallenge_func(self.params)
+        if self.params.desafio_em_andamento == False:
+            self.newChallenge_func(self.params)
+            
+        else:
+            print(f'* Já existe um desafio em andamento.')
     
     
     # Botão: sair da tela

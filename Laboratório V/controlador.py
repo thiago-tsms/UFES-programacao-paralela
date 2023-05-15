@@ -13,6 +13,10 @@ class Params:
         self.solution = 0           # string que se aplicada a solução resolvera o desafio
         self.winer = 0              # id do minirador que resolveu (-1: o desafio não foi resolvido)
         
+        self.desafio_em_andamento = False
+        
+        self.client = None
+        
 
 fila_solution = "sd/lab5/solution"
 fila_challenge = 'sd/lab5/challenge'
@@ -42,11 +46,12 @@ def finalizar_mqtt(client):
     
 
 def gerar_novo_desafio(params):
-    print(f'* Gerando Novo Desafio')
+    print(f'\n* Gerando Novo Desafio')
     
     params.transaction_id += 1
     params.challenge = random.randint(0, 10)
     params.winner = -1
+    params.desafio_em_andamento = True
     
     msg = {
         'TransactionID': params.transaction_id,
@@ -56,6 +61,8 @@ def gerar_novo_desafio(params):
     # Enviar desafio padronizado
     params.client.publish(fila_challenge, json.dumps(msg))
     
+    print(f'-- TransactionID: {params.transaction_id} \n-- Desafio: {params.challenge} \n')
+    
 
 def ouvindo_broker(client, userdata, msg):
 
@@ -63,35 +70,54 @@ def ouvindo_broker(client, userdata, msg):
     pt = ProvaTrabalho()
     
     if msg.topic == fila_solution:
-        print(f'\n* Desafio Recebido')
+        print(f'\n* Solução Recebida')
 
         msg = json.loads(str(msg.payload.decode("utf-8")))
         client_id = msg['ClientID']
         transaction_id = msg['TransactionID']
         solution = msg['Solution']
 
-        print(f'-- ClientID: {client_id} \n-- TransactionID: {transaction_id}, \n-- Solution: {solution}')
+        print(f'-- ClientID: {client_id} \n-- TransactionID: {transaction_id} \n-- Solution: {solution}')
 
+        # Desafio não corrente
         if params.transaction_id != transaction_id:
-            print(f'- Não exisiste esse desafio')
+            print(f'-- Não exisiste esse desafio')
         
+        # Desafio já solucionado
         elif params.winer == -1:
-            print('Este desafio já foi solucionado')
+            print('-- Este desafio já foi solucionado \nWinner: {params.winer}')
         
+        # Solução correta
         elif pt.avaliar_hash(params.challenge, pt.gerar_hash(solution)):
-            print(f'* Solução Correta')
+            print(f'* Aprovado')
 
             params.winer = client_id
             params.solution = solution
+            params.desafio_em_andamento = False
+            
+            msg = {
+                'ClientID': client_id,
+                'TransactionID': transaction_id,
+                'Solution': solution,
+                'Result': 1
+            }
+            
+            params.client.publish(fila_result, json.dumps(msg))
         
+        # Solução incorreta
         else:
-            print(f'Solução Incorreta')
+            print(f'* Reprovado')
+            
+            msg = {
+                'ClientID': client_id,
+                'TransactionID': transaction_id,
+                'Solution': solution,
+                'Result': 1
+            }
+            
+            params.client.publish(fila_result, json.dumps(msg))
         
         print()
-    
-        # Verificar solução
-        # Se ok, atualizar estados e publicar em: fila_result
-        # Se não, publicar falso na fila fila_result
     
 
 def run():
