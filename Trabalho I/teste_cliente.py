@@ -32,6 +32,8 @@ def run():
     
     while True:
         None
+    
+    mqtt.finalizar_mqtt()
 
 
 if __name__ == '__main__':

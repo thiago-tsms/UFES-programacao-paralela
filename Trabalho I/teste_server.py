@@ -1,4 +1,5 @@
 from mqtt import ComunicacaoMQTTServer
+import time
 
 #Parametros de inicialização
 nClients = 3
@@ -8,26 +9,24 @@ MetaAcuracia = 100
 TimeOut = 5
 
 
-def avalia_condicoes_iniciais(id_clientes):
-    if len(id_clientes) < nMinClients:
-        print(f'Número insuficiente de clientes disponível - min: {nClients} - atual: {len(id_clientes)}')
+def aguarda_condicoes_iniciais(mqtt):
+    print(f'Aguardando número de clientes')
+    while len(mqtt.get_clientes()) < nMinClients:
+        time.sleep(1)
+    print(f'Aprendizado federado iniciando')
 
 
 def run():
     mqtt = ComunicacaoMQTTServer(TimeOut)
     
-    # Obtem todos os clientes conectados
-    #id_clientes = mqtt.obter_clientes()
+    # Espera o número mínimo de clientes para comessar a execução
+    aguarda_condicoes_iniciais(mqtt)
     
-    # Avalia as condições para início do aprendizado
-    #avalia_condicoes_iniciais(id_clientes)
-    
-    
-    
-    #print(id_clientes)
-    
+   
     while True:
         None
+    
+    mqtt.finalizar_mqtt()
     
     
 if __name__ == '__main__':

@@ -73,7 +73,6 @@ class ComunicacaoMQTTServer():
                             lc.last_time = time.time()
                             break
                         
-    
     # Manda mensagens a cada segundo e vê se o server ainda esta conectado
     def keep_connection(self, lista_clientes):
         while True:
@@ -91,6 +90,10 @@ class ComunicacaoMQTTServer():
                     lista_clientes.remove(lc)
             
             time.sleep(1)
+    
+    
+    def get_clientes(self):
+        return [lc.id for lc in self.lista_clientes]
             
 
 class ComunicacaoMQTTCliente():
