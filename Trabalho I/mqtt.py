@@ -3,12 +3,11 @@ from threading import Thread
 import json
 import random
 import time
+import numpy as np
 
 topico_keep_connection = "sd/tr1/keep_connection"
-#topico_get_clientes = "sd/tr1/get_clientes"
-#topico_send_dados_clientes = "sd/tr1/send_dados_clientes"
-#topico_send_gradiente = "sd/tr1/send_gradiente"
-#topico_recv_gradiente = "sd/tr1/recv_gradiente"
+topico_send_gradiente = "sd/tr1/send_gradiente"
+topico_recv_gradiente = "sd/tr1/recv_gradiente"
 
 
 class Parametros:
@@ -22,7 +21,7 @@ class Conexao_Cliente:
         self.last_time = last_time
 
 
-class ComunicacaoMQTTServer():   
+class ComunicacaoMQTTServer:
 
     def __init__(self, time_out):
         self.time_out = time_out
@@ -92,15 +91,26 @@ class ComunicacaoMQTTServer():
             time.sleep(1)
     
     
+    # Obtem id dos clientes conectados
     def get_clientes(self):
         return [lc.id for lc in self.lista_clientes]
+    
+    # Envia os dados para um ciclo de aprendizado
+    def start_iteracao(self, params):
+        self.client.publish(topico_send_gradiente, params)
+        
+        # Desafio - Convertero os dados para enviar e converter para recebe-los
+        
+        #self.client.publish(topico_send_gradiente, np.array(params, dtype=object).tobytes())
+        #print(np.array(params).dtype)
             
 
-class ComunicacaoMQTTCliente():
+class ComunicacaoMQTTCliente:
 
-    def __init__(self):
+    def __init__(self, executa_aprendizado):
         self.params = Parametros()
         self.params.id = random.randint(0, 1000)
+        self.executa_aprendizado = executa_aprendizado
 
         self.inicia_mqtt()
         self.subscribe_client()
@@ -120,6 +130,7 @@ class ComunicacaoMQTTCliente():
     def subscribe_client(self):
 
         self.client.subscribe(topico_keep_connection)
+        self.client.subscribe(topico_send_gradiente)
 
         self.client.on_message = self.on_message_client
         self.client.loop_start()
@@ -136,5 +147,14 @@ class ComunicacaoMQTTCliente():
                 self.client.publish(topico_keep_connection, json.dumps({
                     'id': self.params.id
                 }))
+        
+        
+        elif msg.topic == topico_send_gradiente:
+            self.executa_aprendizado(msg.payload)
+            
+            # Como receber os dados
+            
+            #print(msg.payload)
+            #print(np.frombuffer(msg.payload, 'object'))
             
             
