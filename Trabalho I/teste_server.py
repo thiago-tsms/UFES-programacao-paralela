@@ -20,7 +20,11 @@ def aguarda_condicoes_iniciais(mqtt):
     while len(mqtt.get_clientes()) < nMinClients:
         time.sleep(1)
     print(f'Aprendizado federado iniciando')
+    
 
+def convert(res, lista):
+    for i in lista:
+        return res.append
 
 def run():
     mqtt = ComunicacaoMQTTServer(TimeOut)
@@ -31,15 +35,29 @@ def run():
     (x_train, y_train, x_test, y_test) = obtem_dados(num_clients)
     aprendizado = Aprendizado(x_train, y_train, x_test, y_test, input_shape, num_classes)
     
-    grad = aprendizado.get_parameters()
+    res = aprendizado.get_parameters()
     
     
     while True:
+        all_gradientes = []
         
-        # Tenta enviar os gradientes
-        mqtt.start_iteracao(grad)
-        time.sleep(10)
+        # Espera ter o número mínimo de clientes para comessar a execução
+        aguarda_condicoes_iniciais(mqtt)
     
+        # Tenta enviar os gradientes // retorna para quantos estão ouvindo
+        n_clientes = mqtt.start_aprendizado(res)
+        
+        # Espera a recepção de todos
+        for n in range(n_clientes):
+            all_gradientes.append(mqtt.get_gradientes())
+        
+        ####
+        # Efetuar a agregação
+        ####
+            
+        print(aprendizado.evaluate(aprendizado.shape(all_gradientes[0])))
+        time.sleep(10)
+        
     mqtt.finalizar_mqtt()
     
     

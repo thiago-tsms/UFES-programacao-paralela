@@ -1,5 +1,5 @@
 from mqtt import ComunicacaoMQTTCliente
-#from aprendizado import *
+from aprendizado import *
 
 
 input_shape = (28, 28, 1)
@@ -7,16 +7,15 @@ num_classes = 10
 num_clients = 10
 
 
-#(x_train, y_train, x_test, y_test) = obtem_dados(num_clients)
-#aprendizado = Aprendizado(x_train, y_train, x_test, y_test, input_shape, num_classes)
+(x_train, y_train, x_test, y_test) = obtem_dados(num_clients)
+aprendizado = Aprendizado(x_train, y_train, x_test, y_test, input_shape, num_classes)
 
 
-# Efetua as operações de cada iteração
-def executa_aprendizado(msg):
-    print(msg)
-    
-    # Efetua o aprendizado e retorna os gradientes
-    #return aprendizado.fit(grad)
+# Efetua as operações de cada iteração e retorna os gradientes
+def executa_aprendizado(params):
+    grad = aprendizado.fit(aprendizado.shape(params))
+    aprendizado.evaluate(grad)
+    return grad
 
 
 def run():

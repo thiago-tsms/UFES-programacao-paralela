@@ -33,6 +33,7 @@ class Aprendizado:
         self.x_test = x_test
         self.y_test = y_test
         self.define_model(input_shape, num_classes)
+        self.m_shape = [s.shape for s in self.model.get_weights()]
 
 
     # Define o modelo
@@ -73,3 +74,7 @@ class Aprendizado:
         self.model.set_weights(params)
         loss, acc = self.model.evaluate(self.x_test, self.y_test, verbose=2)
         return loss, len(self.x_test), {"accuracy": acc}
+
+
+    def shape(self, params):
+        return [np.array(p).reshape(s) for s, p in zip(self.m_shape, params)]

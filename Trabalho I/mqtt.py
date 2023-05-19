@@ -5,17 +5,29 @@ from json import JSONEncoder
 import random
 import time
 import numpy as np
+import queue
 
 topico_keep_connection = "sd/tr1/keep_connection"
 topico_send_gradiente = "sd/tr1/send_gradiente"
 topico_recv_gradiente = "sd/tr1/recv_gradiente"
 
+#broker = "broker.emqx.io"
+broker = "localhost"
+
 
 class NumpyArrayEncoder(JSONEncoder):
     def default(self, obj):
-        if isinstance(obj, numpy.ndarray):
+        if isinstance(obj, np.bool_):
+            return bool(obj)
+        if isinstance(obj, (np.float, np.complexfloating)):
+            return float(obj)
+        if isinstance(obj, np.integer):
+            return int(obj)
+        if isinstance(obj, np.ndarray):
             return obj.tolist()
-        return JSONEncoder.default(self, obj)
+        if isinstance(obj, np.string_):
+            return str(obj)
+        return super(NumpyArrayEncoder, self).default(obj)
     
 
 class Parametros:
@@ -36,14 +48,16 @@ class ComunicacaoMQTTServer:
         self.inicia_mqtt()
         self.subscribe_server()
         self.lista_clientes = []
+        self.queue = queue.Queue()
         
         tr = Thread(target=self.keep_connection, args=(self.lista_clientes,))
         tr.start()
+        
     
     # Inicia o MQTT
     def inicia_mqtt(self):
         self.client = mqtt.Client("controlador-federado-ufes")
-        self.client.connect("broker.emqx.io")
+        self.client.connect(broker)
 
     # Finaliza o MQTT
     def finalizar_mqtt(self):
@@ -83,7 +97,7 @@ class ComunicacaoMQTTServer:
                     
         # Recebo os dados para o fim da iteração
         elif msg.topic == topico_recv_gradiente:
-            res = self.executa_aprendizado(json.loads(msg.payload))
+            self.queue.put(json.loads(msg.payload))
                         
     # Manda mensagens a cada segundo e vê se o server ainda esta conectado
     def keep_connection(self, lista_clientes):
@@ -106,15 +120,17 @@ class ComunicacaoMQTTServer:
     
     
     # Obtem id dos clientes conectados
-    def get_clientes(self):res = self.executa_aprendizado(json.loads(msg.payload))
-    def start_iteracao(self, params):
-        self.client.publish(topico_send_gradiente, params)
-        
-        # Desafio - Convertero os dados para enviar e converter para recebe-los
-        
-        #self.client.publish(topico_send_gradiente, np.array(params, dtype=object).tobytes())
-        #print(np.array(params).dtype)
-            
+    def get_clientes(self):
+        return [c.id for c in self.lista_clientes]
+      
+    # Envia os dados para os clientes  
+    def start_aprendizado(self, params):
+        self.client.publish(topico_send_gradiente, json.dumps(params, cls=NumpyArrayEncoder))
+        return len(self.lista_clientes)
+     
+    # Recebe os dados
+    def get_gradientes(self):
+        return self.queue.get()
 
 class ComunicacaoMQTTCliente:
 
@@ -130,7 +146,7 @@ class ComunicacaoMQTTCliente:
     # Inicia o MQTT
     def inicia_mqtt(self):
         self.client = mqtt.Client(f'no-{self.params.id}-federado-ufes')
-        self.client.connect("broker.emqx.io")
+        self.client.connect(broker)
     
     # Finaliza o MQTT
     def finalizar_mqtt(self):
@@ -162,6 +178,6 @@ class ComunicacaoMQTTCliente:
         # Recebe os dados para o início da iteração
         elif msg.topic == topico_send_gradiente:
             res = self.executa_aprendizado(json.loads(msg.payload))
-            #self.client.publish(topico_recv_gradiente, json.dumps(res, cls=NumpyArrayEncoder))
+            self.client.publish(topico_recv_gradiente, json.dumps(res, cls=NumpyArrayEncoder))
 
-            
+    
