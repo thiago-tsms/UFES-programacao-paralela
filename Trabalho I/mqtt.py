@@ -108,7 +108,12 @@ class ComunicacaoMQTTServer:
     # Obtem id dos clientes conectados
     def get_clientes(self):res = self.executa_aprendizado(json.loads(msg.payload))
     def start_iteracao(self, params):
-        self.client.publish(topico_send_gradiente, json.dumps(params, cls=NumpyArrayEncoder))
+        self.client.publish(topico_send_gradiente, params)
+        
+        # Desafio - Convertero os dados para enviar e converter para recebe-los
+        
+        #self.client.publish(topico_send_gradiente, np.array(params, dtype=object).tobytes())
+        #print(np.array(params).dtype)
             
 
 class ComunicacaoMQTTCliente:
