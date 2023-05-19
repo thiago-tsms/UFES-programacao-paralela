@@ -2,6 +2,7 @@ from mqtt import ComunicacaoMQTTServer
 from aprendizado import *
 import time
 
+
 #Parametros de inicialização
 nClients = 3
 nMinClients = 1
@@ -36,7 +37,7 @@ def run():
     while True:
         
         # Tenta enviar os gradientes
-        mqtt.start_iteracao("grad")
+        mqtt.start_iteracao(grad)
         time.sleep(10)
     
     mqtt.finalizar_mqtt()

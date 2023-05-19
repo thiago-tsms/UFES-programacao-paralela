@@ -16,7 +16,7 @@ def executa_aprendizado(msg):
     print(msg)
     
     # Efetua o aprendizado e retorna os gradientes
-    #res = aprendizado.fit(grad)
+    #return aprendizado.fit(grad)
 
 
 def run():

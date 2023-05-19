@@ -1,6 +1,7 @@
 import paho.mqtt.client as mqtt
 from threading import Thread
 import json
+from json import JSONEncoder
 import random
 import time
 import numpy as np
@@ -9,6 +10,13 @@ topico_keep_connection = "sd/tr1/keep_connection"
 topico_send_gradiente = "sd/tr1/send_gradiente"
 topico_recv_gradiente = "sd/tr1/recv_gradiente"
 
+
+class NumpyArrayEncoder(JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, numpy.ndarray):
+            return obj.tolist()
+        return JSONEncoder.default(self, obj)
+    
 
 class Parametros:
     def __init__(self):
@@ -46,6 +54,7 @@ class ComunicacaoMQTTServer:
     def subscribe_server(self):
 
         self.client.subscribe(topico_keep_connection)
+        self.client.subscribe(topico_recv_gradiente)
         
         self.client.on_message = self.on_message_server
         self.client.loop_start()
@@ -71,9 +80,14 @@ class ComunicacaoMQTTServer:
                         if lc.id == id:
                             lc.last_time = time.time()
                             break
+                    
+        # Recebo os dados para o fim da iteração
+        elif msg.topic == topico_recv_gradiente:
+            res = self.executa_aprendizado(json.loads(msg.payload))
                         
     # Manda mensagens a cada segundo e vê se o server ainda esta conectado
     def keep_connection(self, lista_clientes):
+        
         while True:
             drop = []
             
@@ -92,17 +106,9 @@ class ComunicacaoMQTTServer:
     
     
     # Obtem id dos clientes conectados
-    def get_clientes(self):
-        return [lc.id for lc in self.lista_clientes]
-    
-    # Envia os dados para um ciclo de aprendizado
+    def get_clientes(self):res = self.executa_aprendizado(json.loads(msg.payload))
     def start_iteracao(self, params):
-        self.client.publish(topico_send_gradiente, params)
-        
-        # Desafio - Convertero os dados para enviar e converter para recebe-los
-        
-        #self.client.publish(topico_send_gradiente, np.array(params, dtype=object).tobytes())
-        #print(np.array(params).dtype)
+        self.client.publish(topico_send_gradiente, json.dumps(params, cls=NumpyArrayEncoder))
             
 
 class ComunicacaoMQTTCliente:
@@ -148,13 +154,9 @@ class ComunicacaoMQTTCliente:
                     'id': self.params.id
                 }))
         
-        
+        # Recebe os dados para o início da iteração
         elif msg.topic == topico_send_gradiente:
-            self.executa_aprendizado(msg.payload)
-            
-            # Como receber os dados
-            
-            #print(msg.payload)
-            #print(np.frombuffer(msg.payload, 'object'))
-            
+            res = self.executa_aprendizado(json.loads(msg.payload))
+            #self.client.publish(topico_recv_gradiente, json.dumps(res, cls=NumpyArrayEncoder))
+
             
