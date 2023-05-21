@@ -13,7 +13,8 @@ aprendizado = Aprendizado(x_train, y_train, x_test, y_test, input_shape, num_cla
 
 # Efetua as operações de cada iteração e retorna os gradientes
 def executa_aprendizado(params):
-    grad = aprendizado.fit(aprendizado.shape(params))
+    print("Executando aplrendizado")
+    grad = aprendizado.fit(aprendizado.re_shape(params))
     aprendizado.evaluate(grad)
     return grad
 

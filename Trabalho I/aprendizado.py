@@ -57,7 +57,7 @@ class Aprendizado:
 
 
     # Obtem os gradientes
-    def get_parameters(self):
+    def get_weights(self):
         return self.model.get_weights()
     
     
@@ -76,5 +76,12 @@ class Aprendizado:
         return loss, len(self.x_test), {"accuracy": acc}
 
 
-    def shape(self, params):
+    def re_shape(self, params):
         return [np.array(p).reshape(s) for s, p in zip(self.m_shape, params)]
+    
+    def federated_averaging(self, model_weights, all_weights):
+        for w in all_weights:
+            model_weights += w
+            
+        return all_weights[0]    
+    
