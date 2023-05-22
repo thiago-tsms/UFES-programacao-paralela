@@ -43,8 +43,8 @@ class Conexao_Cliente:
 
 class ComunicacaoMQTTServer:
 
-    def __init__(self, time_out):
-        self.time_out = time_out
+    def __init__(self, time_out=5):
+        self.time_out = time_out # Não funcionando
         self.inicia_mqtt()
         self.subscribe_server()
         self.lista_clientes = []

@@ -7,7 +7,6 @@ import time
 nClients = 2
 nMaxRouds = 4
 MetaAcuracia = 0.98
-TimeOut = 5
 
 input_shape = (28, 28, 1)
 num_classes = 10
@@ -25,7 +24,7 @@ def convert(res, lista):
         return res.append
 
 def run():
-    mqtt = ComunicacaoMQTTServer(TimeOut)
+    mqtt = ComunicacaoMQTTServer()
     
     # Espera o número mínimo de clientes para comessar a execução
     #aguarda_condicoes_iniciais(mqtt)
