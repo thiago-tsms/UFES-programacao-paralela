@@ -50,8 +50,13 @@ class ComunicacaoMQTTServer:
         self.lista_clientes = []
         self.queue = queue.Queue()
         
-        tr = Thread(target=self.keep_connection, args=(self.lista_clientes,))
-        tr.start()
+        #tr = Thread(target=self.keep_connection, args=(self.lista_clientes,))
+        #tr.start()
+        
+        # Pergunta quais clientes que já estão rodando
+        self.client.publish(topico_keep_connection, json.dumps({
+            'id': -1,
+        }))
         
     
     # Inicia o MQTT

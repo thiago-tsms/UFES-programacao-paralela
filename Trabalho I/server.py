@@ -4,10 +4,9 @@ import time
 
 
 #Parametros de inicialização
-nClients = 3
-nMinClients = 2
+nClients = 2
 nMaxRouds = 4
-#MetaAcuracia = 100
+MetaAcuracia = 0.98
 TimeOut = 5
 
 input_shape = (28, 28, 1)
@@ -17,9 +16,8 @@ num_clients = 10
 
 def aguarda_condicoes_iniciais(mqtt):
     print(f'Aguardando número de clientes')
-    while len(mqtt.get_clientes()) < nMinClients:
+    while len(mqtt.get_clientes()) < nClients:
         time.sleep(1)
-    print(f'Aprendizado federado iniciando')
     
 
 def convert(res, lista):
@@ -38,12 +36,14 @@ def run():
     #res = aprendizado.get_weights()
     
     model_weights = aprendizado.get_weights()
+    
+    # Espera ter o número mínimo de clientes para comessar a execução
+    aguarda_condicoes_iniciais(mqtt)
 
+    print(f'Aprendizado federado iniciando')
+    
     for _ in range(nMaxRouds):
         all_weights = []
-                
-        # Espera ter o número mínimo de clientes para comessar a execução
-        aguarda_condicoes_iniciais(mqtt)
     
         # Tenta enviar os gradientes // retorna para quantos estão ouvindo
         n_clientes = mqtt.start_aprendizado(model_weights)
@@ -54,11 +54,15 @@ def run():
         
         model_weights = aprendizado.federated_averaging(model_weights, all_weights)
         
-        print(aprendizado.evaluate(model_weights))
+        evaluate = aprendizado.evaluate(model_weights)
+        #print(evaluate)
+        
+        if evaluate[2]['accuracy'] >= MetaAcuracia:
+            break
+     
+    print('Aprendizado finalizado')
 
     mqtt.finalizar_mqtt()
-    
-    print('Aprendizado finalizado')
     
     
 if __name__ == '__main__':

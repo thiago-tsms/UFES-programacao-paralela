@@ -76,9 +76,11 @@ class Aprendizado:
         return loss, len(self.x_test), {"accuracy": acc}
 
 
+    # Faz o re-shape nos dados recebidos
     def re_shape(self, params):
         return [np.array(p).reshape(s) for s, p in zip(self.m_shape, params)]
     
+    # Fas a agregação dos dados
     def federated_averaging(self, model_weights, all_weights):
         for w in all_weights:
             model_weights += w
