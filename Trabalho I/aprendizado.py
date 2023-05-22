@@ -2,7 +2,6 @@ import tensorflow as tf
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Conv2D, MaxPool2D,Flatten,Dense
 from tensorflow.keras.optimizers import SGD
-import flwr as fl
 import numpy as np
 
 
@@ -80,10 +79,13 @@ class Aprendizado:
     def re_shape(self, params):
         return [np.array(p).reshape(s) for s, p in zip(self.m_shape, params)]
     
-    # Fas a agregação dos dados
+    # Faz a agregação dos dados
     def federated_averaging(self, model_weights, all_weights):
-        for w in all_weights:
-            model_weights += w
-            
-        return all_weights[0]    
-    
+        averaged_weights = []
+
+        for layer_weights in zip(*all_weights):
+            # Calcula a média ponderada dos pesos de cada camada
+            averaged_layer_weights = np.mean(layer_weights, axis=0)
+            averaged_weights.append(averaged_layer_weights)
+
+        return averaged_weights    
