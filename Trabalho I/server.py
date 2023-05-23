@@ -1,12 +1,14 @@
+import sys
 from mqtt import ComunicacaoMQTTServer
 from aprendizado import *
 import time
 
 
 #Parametros de inicialização
-nClients = 2
-nMaxRouds = 4
-MetaAcuracia = 0.98
+nClients = int(sys.argv[1])
+nMaxRouds = int(sys.argv[2])
+MetaAcuracia = 1
+accuracy_list = []
 
 input_shape = (28, 28, 1)
 num_classes = 10
@@ -38,6 +40,7 @@ def run():
     
     for round in range(nMaxRouds):
         all_weights = []
+        rounds_executados = round
     
         # Tenta enviar os gradientes // retorna para quantos estão ouvindo
         n_clientes = mqtt.start_aprendizado(model_weights)
@@ -46,10 +49,11 @@ def run():
         for _ in range(n_clientes):
             all_weights.append(aprendizado.re_shape(mqtt.get_gradientes()))
         
-        model_weights = aprendizado.federated_averaging(model_weights, all_weights)
+        model_weights = aprendizado.federated_averaging(all_weights)
         
         evaluate = aprendizado.evaluate(model_weights)
         accuracy = evaluate[2]['accuracy']
+        accuracy_list.append((round, accuracy))
         
         print(f'-- Round: {round+1} - Accuracy: {accuracy}')
         
@@ -61,6 +65,13 @@ def run():
 
     mqtt.finalizar_mqtt()
     
+    with open(f'results/result_{nClients}.csv', "w") as arquivo:
+        for a in accuracy_list:
+            arquivo.write(f'{a[0]+1};{a[1]}\n')
+    
+    
+    accuracy_list
+    rounds_executados
     
 if __name__ == '__main__':
     run()   

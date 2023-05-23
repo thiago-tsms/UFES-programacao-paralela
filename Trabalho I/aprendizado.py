@@ -80,7 +80,7 @@ class Aprendizado:
         return [np.array(p).reshape(s) for s, p in zip(self.m_shape, params)]
     
     # Faz a agregação dos dados
-    def federated_averaging(self, model_weights, all_weights):
+    def federated_averaging(self, all_weights):
         averaged_weights = []
 
         for layer_weights in zip(*all_weights):
