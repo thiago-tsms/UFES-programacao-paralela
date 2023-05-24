@@ -45,7 +45,7 @@ São usados 5 cliente e um servidor
 
 Requisitos: **python** e **pip** instalados
 
-Para executar a simulação:
+Para executar o programa:
 <ul>
     <li>criar ambiente: <em>python -m venv .venv</em></li>
     <li>ativar ambiente: <em>source .venv/bin/activate</em></li>
@@ -59,11 +59,12 @@ Para executar a simulação:
 
 Requisitos: **python** e **pip** instalados
 
-Para executar a simulação:
+Para executar o programa:
 <ul>
     <li>criar ambiente: <em>python -m venv .venv</em></li>
     <li>ativar ambiente: <em>source .venv/bin/activate</em></li>
     <li>configurar ambiente: <em>pip install -r requirements.txt</em></li>
+    <li>Ubuntu: <em>sudo apt-get install python3-tk</em></li>
 </ul>
 
 
@@ -71,7 +72,7 @@ Para executar a simulação:
 
 Requisitos: **python** e **pip** instalados
 
-Para executar a simulação:
+Para executar o programa:
 <ul>
     <li>criar ambiente: <em>python -m venv .venv</em></li>
     <li>ativar ambiente: <em>source .venv/bin/activate</em></li>
@@ -83,13 +84,18 @@ Para executar a simulação:
 ### Experimentar a implementação de sistemas de comunicação indireta por meio de middleware Publish/Subscribe (Pub/Sub) e Filas de Mensagens (Message Queues) com uso do broker EMQX MQTT para resolução de provas de trabalho
 
 Requisitos: **python**, **pip** e **broker EMQX** instalados
+*É necessário especificar no broker que o tamanho das mensagens sejam maiores, foi especificado 100mb para esse projeto
 
 Para executar a simulação:
 <ul>
     <li>criar ambiente: <em>python -m venv .venv</em></li>
     <li>ativar ambiente: <em>source .venv/bin/activate</em></li>
     <li>configurar ambiente: <em>pip install -r requirements.txt</em></li>
-    <li>Ubuntu: <em>sudo apt-get install python3-tk</em></li>
+    <li>estar com broker rodando</li>
 </ul>
 
-É necessário especificar no broker que o tamanho das mensagens sejam maiores, foi especificado 100mb para esse projeto
+
+Para executar a simulação:
+<ul>
+    <li>para simlar o experimento: <em>sh run.sh</em></li>
+</ul>

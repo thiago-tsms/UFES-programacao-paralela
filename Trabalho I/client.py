@@ -1,7 +1,6 @@
 from mqtt import ComunicacaoMQTTCliente
 from aprendizado import *
 
-
 input_shape = (28, 28, 1)
 num_classes = 10
 num_clients = 10
@@ -13,9 +12,11 @@ aprendizado = Aprendizado(x_train, y_train, x_test, y_test, input_shape, num_cla
 
 # Efetua as operações de cada iteração e retorna os gradientes
 def executa_aprendizado(params):
-    print("Executando aprendizado")
+    print("* Executando aprendizado")
+    
+    # A primeira execução ignora gradientes recebidos
     grad = aprendizado.fit(aprendizado.re_shape(params))
-    aprendizado.evaluate(grad)
+    #aprendizado.evaluate(grad)
     return grad
 
 
