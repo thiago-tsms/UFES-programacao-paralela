@@ -54,9 +54,6 @@ Para executar a simulação:
 </ul>
 
 
-# Trabalho I
-
-
 # LABORATÓRIO V
 ### Implementação do aprendizado federado com a troca de mensagens e sincronização com uso de broker
 
@@ -70,6 +67,19 @@ Para executar a simulação:
 </ul>
 
 
+# LABORATÓRIO VI
+
+Requisitos: **python** e **pip** instalados
+
+Para executar a simulação:
+<ul>
+    <li>criar ambiente: <em>python -m venv .venv</em></li>
+    <li>ativar ambiente: <em>source .venv/bin/activate</em></li>
+    <li>configurar ambiente: <em>pip install -r requirements.txt</em></li>
+</ul>
+
+
+# Trabalho I
 ### Experimentar a implementação de sistemas de comunicação indireta por meio de middleware Publish/Subscribe (Pub/Sub) e Filas de Mensagens (Message Queues) com uso do broker EMQX MQTT para resolução de provas de trabalho
 
 Requisitos: **python**, **pip** e **broker EMQX** instalados
