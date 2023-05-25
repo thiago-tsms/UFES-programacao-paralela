@@ -19,9 +19,14 @@ def executa_aprendizado(params):
     #aprendizado.evaluate(grad)
     return grad
 
+def avalia_resultado(params):
+    accuracy = aprendizado.evaluate(aprendizado.re_shape(params))[2]['accuracy']
+    print(f'** Resultado Alcançado: {accuracy} **')
+    return accuracy
+
 
 def run():
-    mqtt = ComunicacaoMQTTCliente(executa_aprendizado)
+    mqtt = ComunicacaoMQTTCliente(executa_aprendizado, avalia_resultado)
     
     # Dentro do MQTT tem uma função que esta escutando as mensagens
 

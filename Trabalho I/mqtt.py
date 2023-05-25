@@ -10,6 +10,8 @@ import queue
 topico_keep_connection = "sd/tr1/keep_connection"
 topico_send_gradiente = "sd/tr1/send_gradiente"
 topico_recv_gradiente = "sd/tr1/recv_gradiente"
+topico_avalia_send = "sd/tr1/avalia/send"
+topico_avalia_recv = "sd/tr1/avalia/recv"
 
 #broker = "broker.emqx.io"
 broker = "localhost"
@@ -49,6 +51,7 @@ class ComunicacaoMQTTServer:
         self.subscribe_server()
         self.lista_clientes = []
         self.queue = queue.Queue()
+        self.queue2 = queue.Queue()
         
         #tr = Thread(target=self.keep_connection, args=(self.lista_clientes,))
         #tr.start()
@@ -74,6 +77,7 @@ class ComunicacaoMQTTServer:
 
         self.client.subscribe(topico_keep_connection)
         self.client.subscribe(topico_recv_gradiente)
+        self.client.subscribe(topico_avalia_recv)
         
         self.client.on_message = self.on_message_server
         self.client.loop_start()
@@ -103,6 +107,11 @@ class ComunicacaoMQTTServer:
         # Recebo os dados para o fim da iteração
         elif msg.topic == topico_recv_gradiente:
             self.queue.put(json.loads(msg.payload))
+        
+        # Avalia o resultado final
+        elif msg.topic == topico_avalia_recv:
+            self.queue2.put(float(msg.payload))
+
                         
     # Manda mensagens a cada segundo e vê se o server ainda esta conectado
     def keep_connection(self, lista_clientes):
@@ -137,12 +146,22 @@ class ComunicacaoMQTTServer:
     def get_gradientes(self):
         return self.queue.get()
 
+    # Envia modelo final
+    def envia_modelo_final(self, params):
+        self.client.publish(topico_send_gradiente, json.dumps(params, cls=NumpyArrayEncoder))
+        return len(self.lista_clientes)
+    
+    def recebe_pesos_finais(self):
+        return self.queue2.get()
+
+
 class ComunicacaoMQTTCliente:
 
-    def __init__(self, executa_aprendizado):
+    def __init__(self, executa_aprendizado, avalia_resultado):
         self.params = Parametros()
         self.params.id = random.randint(0, 1000)
         self.executa_aprendizado = executa_aprendizado
+        self.avalia_resultado = avalia_resultado
 
         self.inicia_mqtt()
         self.subscribe_client()
@@ -163,6 +182,7 @@ class ComunicacaoMQTTCliente:
 
         self.client.subscribe(topico_keep_connection)
         self.client.subscribe(topico_send_gradiente)
+        self.client.subscribe(topico_avalia_send)
 
         self.client.on_message = self.on_message_client
         self.client.loop_start()
@@ -184,5 +204,9 @@ class ComunicacaoMQTTCliente:
         elif msg.topic == topico_send_gradiente:
             res = self.executa_aprendizado(json.loads(msg.payload))
             self.client.publish(topico_recv_gradiente, json.dumps(res, cls=NumpyArrayEncoder))
-
+        
+        # Avalia o resultado final
+        elif msg.topic == topico_avalia_send:
+            res = self.avalia_resultado(json.loads(msg.payload))
+            self.client.publish(topico_avalia_recv, json.dumps(res))
     

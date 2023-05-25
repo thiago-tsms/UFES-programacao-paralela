@@ -1,6 +1,6 @@
 #!/bin/bash
 
-echo "Executando Tarefa com (2, 4, 6, 8, 10) Clientes e um máximo de 20 Rounds"
+echo "Executando Tarefa com (2, 4, 6, 8, 10) Clientes e um máximo de 20 Rounds e 100% de acurácia"
 
 
 for i in 2 4 6 8 10; do
@@ -13,7 +13,7 @@ for i in 2 4 6 8 10; do
     sleep 5
 
     echo "\n*Iniciando execução: $i\n"
-    python server.py $i 20
+    python server.py $i 20 1
     echo "\n*Finalizando execução: $i\n"
 
     # Finaliza todos os clientes
