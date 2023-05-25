@@ -148,10 +148,10 @@ class ComunicacaoMQTTServer:
 
     # Envia modelo final
     def envia_modelo_final(self, params):
-        self.client.publish(topico_send_gradiente, json.dumps(params, cls=NumpyArrayEncoder))
+        self.client.publish(topico_avalia_send, json.dumps(params, cls=NumpyArrayEncoder))
         return len(self.lista_clientes)
     
-    def recebe_pesos_finais(self):
+    def recebe_avaliacao_final(self):
         return self.queue2.get()
 
 
@@ -208,5 +208,5 @@ class ComunicacaoMQTTCliente:
         # Avalia o resultado final
         elif msg.topic == topico_avalia_send:
             res = self.avalia_resultado(json.loads(msg.payload))
-            self.client.publish(topico_avalia_recv, json.dumps(res))
+            self.client.publish(topico_avalia_recv, res)
     

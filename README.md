@@ -98,4 +98,5 @@ Para executar a simulação:
 Para executar a simulação:
 <ul>
     <li>para simlar o experimento: <em>sh run.sh</em></li>
+    <li>para execução individual: <em>server.py <i><número de clientes></i> <i><número de rounds></i> <i><accuracy></i></em></li>
 </ul>

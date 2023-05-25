@@ -68,7 +68,7 @@ def run():
 
     # Espera a recepção de todos
     for _ in range(n_clientes):
-        all_accuracy.append(mqtt.recebe_pesos_finais())
+        all_accuracy.append(mqtt.recebe_avaliacao_final())
         accuracy = sum(all_accuracy)/len(all_accuracy)
 
 
@@ -81,7 +81,7 @@ def run():
         for a in accuracy_list:
             arquivo.write(f'{a[0]+1};{a[1]}\n')
     
-    with open(f'results/result_final.csv', "w") as arquivo:
+    with open(f'results/result_final.csv', "a") as arquivo:
         arquivo.write(f'{nClients};{accuracy}\n')
     
 
