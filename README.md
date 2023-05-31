@@ -84,8 +84,8 @@ Para executar o programa:
 ### Experimentar a implementação de sistemas de comunicação indireta por meio de middleware Publish/Subscribe (Pub/Sub) e Filas de Mensagens (Message Queues) com uso do broker EMQX MQTT para resolução de provas de trabalho
 
 Requisitos: **python**, **pip** e **broker EMQX** instalados
-*É necessário especificar no broker que o tamanho das mensagens sejam maiores, foi especificado 100mb para esse projeto
-*Video de execução: https://drive.google.com/file/d/12AwNB4RlXLPaOhEJ9sA--EvGooQ9APyY/view?usp=sharing
+* É necessário especificar no broker que o tamanho das mensagens sejam maiores, foi especificado 100mb para esse projeto
+* Video de execução: https://drive.google.com/file/d/12AwNB4RlXLPaOhEJ9sA--EvGooQ9APyY/view?usp=sharing
 
 Para executar a simulação:
 <ul>
