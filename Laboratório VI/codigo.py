@@ -1,5 +1,13 @@
 from mqtt import *
 
+class Minerador:
+    def __init__(self):
+        print()
+    
+class Coordenador:
+    def __init__(self):
+        print()
+
 nClients = 2
 
 def aguarda_grupo(mqtt):
@@ -13,8 +21,10 @@ def run():
 
     mqtt.eleicao()
 
-    print(mqtt.lista_eleicao)
-    print(mqtt.id_lider)
+    if mqtt.id == mqtt.id_lider:
+        cordenador = Coordenador()
+    else:
+        minerador = Minerador()
 
     mqtt.finalizar_mqtt()
 

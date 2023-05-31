@@ -72,7 +72,7 @@ class Comunicacao:
 
         time.sleep(4)
 
-        # Envia pesos e 
+        # Envia id e pesos gerado
         self.client.publish(topico_eleicao, json.dumps({
             'id': self.id,
             'peso': v_rand
@@ -84,6 +84,9 @@ class Comunicacao:
         for le in self.lista_eleicao:
             if le[1] == mv:
                 self.id_lider = le[0]
+        
+        print(mqtt.lista_eleicao)
+        print(mqtt.id_lider)
 
 
 
