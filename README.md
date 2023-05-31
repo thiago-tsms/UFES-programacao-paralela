@@ -41,7 +41,7 @@ São usados 5 cliente e um servidor
 
 # LABORATÓRIO III
 
-### Experimentar a implementação de sistemas distribuídos baseados na arquitetura Cliente/Servidor, usando o conceito de Chamada de Procedimento Remoto (RPC)
+### Experimenta a implementação de sistemas distribuídos baseados na arquitetura Cliente/Servidor, usando o conceito de Chamada de Procedimento Remoto (RPC)
 
 Requisitos: **python** e **pip** instalados
 
@@ -69,6 +69,7 @@ Para executar o programa:
 
 
 # LABORATÓRIO VI
+### Experimentar a implementação de comunicação indireta em sistemas distribuídos de maneira que coordenadores são eleitos a cada iteração. É usado  middleware Publish/Subscribe com filas de mensagens.
 
 Requisitos: **python** e **pip** instalados
 
@@ -81,7 +82,7 @@ Para executar o programa:
 
 
 # Trabalho I
-### Experimentar a implementação de sistemas de comunicação indireta por meio de middleware Publish/Subscribe (Pub/Sub) e Filas de Mensagens (Message Queues) com uso do broker EMQX MQTT para resolução de provas de trabalho
+### Experimentar a implementação de sistemas de comunicação indireta por meio de middleware Publish/Subscribe (Pub/Sub) e Filas de Mensagens (Message Queues) com uso do broker EMQX MQTT para resolução de provas de trabalho.
 
 Requisitos: **python**, **pip** e **broker EMQX** instalados
 * É necessário especificar no broker que o tamanho das mensagens sejam maiores, foi especificado 100mb para esse projeto
@@ -101,3 +102,7 @@ Para executar a simulação:
     <li>para simlar o experimento: <em>sh run.sh</em></li>
     <li>para execução individual: <em>server.py <i>[número de clientes]</i> <i>[número de rounds]</i> <i>[accuracy]</i></em></li>
 </ul>
+
+
+# Trabalho II
+### Experimentar a implementação de sistemas de comunicação indireta por meio de middleware Publish/Subscribe (Pub/Sub) e Filas de Mensagens (Message Queues) com uso do broker EMQX MQTT para resolução de provas de trabalho, de maneira que não haja coordenadores pré-definidos, eles devem ser elitos a cada iteração.
