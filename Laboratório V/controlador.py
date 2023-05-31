@@ -84,7 +84,7 @@ def ouvindo_broker(client, userdata, msg):
             print(f'-- Não exisiste esse desafio')
         
         # Desafio já solucionado
-        elif params.winer == -1:
+        elif params.winer != -1:
             print('-- Este desafio já foi solucionado \nWinner: {params.winer}')
         
         # Solução correta
@@ -112,7 +112,7 @@ def ouvindo_broker(client, userdata, msg):
                 'ClientID': client_id,
                 'TransactionID': transaction_id,
                 'Solution': solution,
-                'Result': 1
+                'Result': -1
             }
             
             params.client.publish(fila_result, json.dumps(msg))
