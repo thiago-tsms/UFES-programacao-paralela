@@ -1,14 +1,12 @@
 import paho.mqtt.client as mqtt
-#from threading import Thread
 from multiprocessing import Queue
 import random
 import json
 import time
-#import numpy as np
 
 broker = "broker.emqx.io"
-topico_anuncio = "sd/lab6/anuncio"
-topico_eleicao = "sd/lab6/eleicao"
+topico_anuncio = "sd/lab6/init"
+topico_eleicao = "sd/lab6/voting"
 topico_solution = "sd/lab6/solution"
 topico_challenge = 'sd/lab6/challenge'
 topico_result = 'sd/lab6/result'
@@ -99,6 +97,7 @@ class Comunicacao:
             self.queue_result.put((client_id, transaction_id, solution, result))
 
 
+    # Realiza a eleição
     def eleicao(self):
         print(f'* Iniciando Eleição')
 
@@ -120,7 +119,7 @@ class Comunicacao:
             if le[1] == mv:
                 self.cliente_data.id_lider = le[0]
         
-        print(f'\n** Resultado da Eleição \nIntegrantes: {self.lista_eleicao} \nID: {self.cliente_data.id} \nID Cordenador: {self.cliente_data.id_lider} \n')
+        print(f'\n** Resultado da Eleição \nIntegrantes: {self.lista_eleicao} \nID: {self.cliente_data.id} \nID Coordenador: {self.cliente_data.id_lider} \n')
     
     # Espera o desafio ser obtido
     def wait_challenge(self):

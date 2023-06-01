@@ -3,8 +3,9 @@ import random
 from resolucao import ProvaTrabalho
 
 
-nClients = 2
+nClients = 3
 
+# Dados relacionados ao cliente
 class ClientesData:
     def __init__(self):
         self.id = random.randint(0, 1000)
@@ -15,6 +16,7 @@ class ClientesData:
         self.winner = -1
         
 
+# Método do minerador
 class Minerador:
     def __init__(self, cliente_data, mqtt):
         self.cliente_data = cliente_data
@@ -31,7 +33,7 @@ class Minerador:
         pt = ProvaTrabalho()
         (hash, self.cliente_data.solution) = pt.buscar_solucao(self.cliente_data.challenge)
         
-        print(f'* Solução: {self.cliente_data.solution}')
+        print(f'* Solução Encontrada \nSolução: {self.cliente_data.solution} \n')
         
         msg = {
             'id': self.cliente_data.id,
@@ -41,13 +43,32 @@ class Minerador:
         
         # Envia solução
         self.mqtt.client.publish(topico_solution, json.dumps(msg))
-        
-        (client_id, transaction_id, solution, result) = self.mqtt.wait_result()
-        
-        if result == 1:
-            print(f'Ganhador: {client_id} \nDesafio: {transaction_id} \nSolução: {solution}')
+
+        # Aguarda solução dos demais        
+        for _ in range(nClients-1):
+            (client_id, transaction_id, solution, result) = self.mqtt.wait_result()
+            
+            if (self.cliente_data.id == client_id) and (result == 1):
+                print(f'** Informações recebidas')
+                print(f'-- Ganhador: {client_id} \n-- TransactionID: {transaction_id} \n-- Solução: {solution}')
+                print('-- Resultado Aceito \n')
+                
+            elif (self.cliente_data.id == client_id) and (result == -1):
+                print(f'** Informações recebidas')
+                print(f'-- ID: {client_id} \n-- TransactionID: {transaction_id} \n-- Solução: {solution}')
+                print('-- Desafio já resolvido \n')
+            
+            elif (self.cliente_data.id == client_id) and (result == 0):
+                print(f'** Informações recebidas')
+                print(f'-- ID: {client_id} \n-- TransactionID: {transaction_id} \n-- Solução: {solution}')
+                print('-- Resultado Rejeitado \n')
+            
+            elif result == 1:
+                print(f'** Informações recebidas')
+                print(f'-- Ganhador: {client_id} \n-- TransactionID: {transaction_id} \n-- Solução: {solution} \n')
     
     
+# Método do Coordenador
 class Coordenador:
     def __init__(self, cliente_data, mqtt):
         self.cliente_data = cliente_data
@@ -55,55 +76,71 @@ class Coordenador:
     
     # Inicia a execução
     def start(self):
-        print(f'** Iniciando Cordenador \n')
+        print(f'** Iniciando Coordenador \n')
         self.gerar_desafio()
         
         # Avalia solução
         pt = ProvaTrabalho()
         
-        # Espera solução
-        (client_id, transaction_id, solution) = self.mqtt.wait_solution()
-        print(f'-- ClientID: {client_id} \n-- TransactionID: {transaction_id} \n-- Solution: {solution}')
-        
-        # Desafio não corrente
-        if self.cliente_data.transaction_id != transaction_id:
-            print(f'-- Não existe esse desafio')
-        
-        # Desafio já solucionado
-        elif self.cliente_data.winner != -1:
-            print('-- Este desafio já foi solucionado \nWinner: {self.cliente_data.winer}')
-        
-        # Solução correta
-        elif pt.avaliar_hash(self.cliente_data.challenge, pt.gerar_hash(solution)):
-            print(f'* Aprovado')
+        # Mantem o loop até o fim da execução
+        while True:
             
-            self.cliente_data.winner = client_id
-            self.cliente_data.solution = solution
-            #params.desafio_em_andamento = False
+            # Result [-1: Desafio não solucionado, 0: Inválida, 1: Solução Correta]
             
-            msg = {
-                'id': self.cliente_data.id,
-                'ClientID': client_id,
-                'TransactionID': transaction_id,
-                'Solution': solution,
-                'Result': 1
-            }
+            # Espera solução
+            (client_id, transaction_id, solution) = self.mqtt.wait_solution()
+            print(f'* Solução recebida:')
+            print(f'-- ClientID: {client_id} \n-- TransactionID: {transaction_id} \n-- Solution: {solution}')
             
-            self.mqtt.client.publish(topico_result, json.dumps(msg))
-        
-        # Solução incorreta
-        else:
-            print(f'* Reprovado')
+            # Desafio não corrente
+            if self.cliente_data.transaction_id != transaction_id:
+                print(f'-- Não existe esse desafio')
             
-            msg = {
-                'id': self.cliente_data.id,
-                'ClientID': client_id,
-                'TransactionID': transaction_id,
-                'Solution': solution,
-                'Result': -1
-            }
+            # Desafio já solucionado
+            elif self.cliente_data.winner != -1:
+                print(f'-- Este desafio já foi solucionado [Winner: {self.cliente_data.winner}] \n')
+                
+                msg = {
+                    'id': self.cliente_data.id,
+                    'ClientID': client_id,
+                    'TransactionID': transaction_id,
+                    'Solution': solution,
+                    'Result': -1
+                }
+                
+                self.mqtt.client.publish(topico_result, json.dumps(msg))
             
-            self.mqtt.client.publish(topico_result, json.dumps(msg))
+            # Solução correta
+            elif pt.avaliar_hash(self.cliente_data.challenge, pt.gerar_hash(solution)):
+                print(f'-- Solução aprovado \n')
+                
+                self.cliente_data.winner = client_id
+                self.cliente_data.solution = solution
+                #params.desafio_em_andamento = False
+                
+                msg = {
+                    'id': self.cliente_data.id,
+                    'ClientID': client_id,
+                    'TransactionID': transaction_id,
+                    'Solution': solution,
+                    'Result': 1
+                }
+                
+                self.mqtt.client.publish(topico_result, json.dumps(msg))
+            
+            # Solução incorreta
+            else:
+                print(f'-- Solução reprovado \n')
+                
+                msg = {
+                    'id': self.cliente_data.id,
+                    'ClientID': client_id,
+                    'TransactionID': transaction_id,
+                    'Solution': solution,
+                    'Result': 0
+                }
+                
+                self.mqtt.client.publish(topico_result, json.dumps(msg))
         
     
     # Gera um novo desafio
@@ -111,7 +148,7 @@ class Coordenador:
         #print(f'\n* Gerando Novo Desafio')
     
         self.cliente_data.transaction_id += 1
-        self.cliente_data.challenge = random.randint(0, 10)
+        self.cliente_data.challenge = random.randint(1, 10)
         self.cliente_data.winner = -1
         #params.desafio_em_andamento = True
         
