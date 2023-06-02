@@ -1,72 +1,41 @@
 import paho.mqtt.client as mqtt
-from threading import Thread
-import json
-from json import JSONEncoder
+from multiprocessing import Queue
 import random
+import json
 import time
-import numpy as np
-import queue
 
-topico_keep_connection = "sd/tr1/keep_connection"
-topico_send_gradiente = "sd/tr1/send_gradiente"
-topico_recv_gradiente = "sd/tr1/recv_gradiente"
-topico_avalia_send = "sd/tr1/avalia/send"
-topico_avalia_recv = "sd/tr1/avalia/recv"
-
-#broker = "broker.emqx.io"
 broker = "localhost"
+topico_anuncio = "sd/lab6/init"
+topico_eleicao = "sd/lab6/voting"
+#topico_solution = "sd/lab6/solution"
+#topico_challenge = 'sd/lab6/challenge'
+#topico_result = 'sd/lab6/result'
 
+class Comunicacao:
 
-class NumpyArrayEncoder(JSONEncoder):
-    def default(self, obj):
-        if isinstance(obj, np.bool_):
-            return bool(obj)
-        if isinstance(obj, (np.float, np.complexfloating)):
-            return float(obj)
-        if isinstance(obj, np.integer):
-            return int(obj)
-        if isinstance(obj, np.ndarray):
-            return obj.tolist()
-        if isinstance(obj, np.string_):
-            return str(obj)
-        return super(NumpyArrayEncoder, self).default(obj)
-    
-
-class Parametros:
-    def __init__(self):
-        self.id = -1
-
-
-class Conexao_Cliente:
-    def __init__(self, id, last_time):
-        self.id = id
-        self.last_time = last_time
-
-
-class ComunicacaoMQTTServer:
-
-    def __init__(self, time_out=5):
-        self.time_out = time_out # Não funcionando
+    def __init__(self, cliente_data):
+        self.cliente_data = cliente_data
+        self.lista_clientes = [self.cliente_data.id]
         self.inicia_mqtt()
         self.subscribe_server()
-        self.lista_clientes = []
-        self.queue = queue.Queue()
-        self.queue2 = queue.Queue()
+        self.lista_eleicao = []
         
-        #tr = Thread(target=self.keep_connection, args=(self.lista_clientes,))
-        #tr.start()
-        
-        # Pergunta quais clientes que já estão rodando
-        self.client.publish(topico_keep_connection, json.dumps({
-            'id': -1,
+        # Usado para aguardat que os dados do 'on_message' tenha sido recebidos e salvos em 'cliente_data'
+        self.queue_challenge = Queue()
+        self.queue_solution = Queue()
+        self.queue_result = Queue()
+
+        time.sleep(4)
+        self.client.publish(topico_anuncio, json.dumps({
+            'id': self.cliente_data.id
         }))
-        
+
     
     # Inicia o MQTT
     def inicia_mqtt(self):
-        self.client = mqtt.Client("controlador-federado-ufes")
+        self.client = mqtt.Client(f'client-{self.cliente_data.id}')
         self.client.connect(broker)
-
+    
     # Finaliza o MQTT
     def finalizar_mqtt(self):
         self.client.loop_stop()
@@ -75,138 +44,95 @@ class ComunicacaoMQTTServer:
     # Se inscreve nos tópicos (server)
     def subscribe_server(self):
 
-        self.client.subscribe(topico_keep_connection)
-        self.client.subscribe(topico_recv_gradiente)
-        self.client.subscribe(topico_avalia_recv)
+        self.client.subscribe(topico_eleicao)
+        self.client.subscribe(topico_anuncio)
+        #self.client.subscribe(topico_solution)
+        #self.client.subscribe(topico_challenge)
+        #self.client.subscribe(topico_result)
         
-        self.client.on_message = self.on_message_server
+        self.client.on_message = self.on_message
         self.client.loop_start()
 
-    # Escuta as mansagens (server)
-    def on_message_server(self, client, userdata, msg):
-
-        # Recebe o id de todos os clientes
-        if msg.topic == topico_keep_connection:
-            msg = json.loads(str(msg.payload.decode("utf-8")))
-            id = msg['id']
-            
-            if id != -1:
-                
-                # Adiciona um novo cliente a lisa
-                if id not in [lc.id for lc in self.lista_clientes]:
-                    self.lista_clientes.append(Conexao_Cliente(id, time.time()))
-                    print(f'Cliente: {id} conectado')
-                    
-                # Marca o tempo de resposta
-                else:
-                    for lc in self.lista_clientes:
-                        if lc.id == id:
-                            lc.last_time = time.time()
-                            break
-                    
-        # Recebo os dados para o fim da iteração
-        elif msg.topic == topico_recv_gradiente:
-            self.queue.put(json.loads(msg.payload))
+    # Recebe as mensagens
+    def on_message(self, client, userdata, msg):
+        data = json.loads(str(msg.payload.decode("utf-8")))
+        origin_id = data['id']
         
-        # Avalia o resultado final
-        elif msg.topic == topico_avalia_recv:
-            self.queue2.put(float(msg.payload))
+        # Elimina mensagens da mesma origem
+        if origin_id == self.cliente_data.id:
+            return
 
-                        
-    # Manda mensagens a cada segundo e vê se o server ainda esta conectado
-    def keep_connection(self, lista_clientes):
+        # Recebe id de novo integrante
+        if msg.topic == topico_anuncio:
+            self.lista_clientes.append(origin_id)
         
-        while True:
-            drop = []
-            
-            self.client.publish(topico_keep_connection, json.dumps({
-                'id': -1,
-            }))
-            
-            for lc in lista_clientes:
-                t = int((time.time() - lc.last_time) * 1000)
-                
-                if t > (self.time_out * 1000):
-                    print(f'Cliente: {lc.id} desconectado')
-                    lista_clientes.remove(lc)
-            
-            time.sleep(1)
-    
-    
-    # Obtem id dos clientes conectados
-    def get_clientes(self):
-        return [c.id for c in self.lista_clientes]
-      
-    # Envia os dados para os clientes  
-    def start_aprendizado(self, params):
-        self.client.publish(topico_send_gradiente, json.dumps(params, cls=NumpyArrayEncoder))
-        return len(self.lista_clientes)
-     
-    # Recebe os dados
-    def get_gradientes(self):
-        return self.queue.get()
+        # Recebe id e pesos da eleição
+        elif msg.topic == topico_eleicao:
+            c_id = data['id']
+            peso = data['peso']
 
-    # Envia modelo final
-    def envia_modelo_final(self, params):
-        self.client.publish(topico_avalia_send, json.dumps(params, cls=NumpyArrayEncoder))
-        return len(self.lista_clientes)
-    
-    def recebe_avaliacao_final(self):
-        return self.queue2.get()
-
-
-class ComunicacaoMQTTCliente:
-
-    def __init__(self, executa_aprendizado, avalia_resultado):
-        self.params = Parametros()
-        self.params.id = random.randint(0, 1000)
-        self.executa_aprendizado = executa_aprendizado
-        self.avalia_resultado = avalia_resultado
-
-        self.inicia_mqtt()
-        self.subscribe_client()
-        self.client.publish(topico_keep_connection, json.dumps({'id': self.params.id}))
-    
-    # Inicia o MQTT
-    def inicia_mqtt(self):
-        self.client = mqtt.Client(f'no-{self.params.id}-federado-ufes')
-        self.client.connect(broker)
-    
-    # Finaliza o MQTT
-    def finalizar_mqtt(self):
-        self.client.loop_stop()
-        self.client.disconnect()
-    
-    # Se inscreve nos tópicos (cliente)
-    def subscribe_client(self):
-
-        self.client.subscribe(topico_keep_connection)
-        self.client.subscribe(topico_send_gradiente)
-        self.client.subscribe(topico_avalia_send)
-
-        self.client.on_message = self.on_message_client
-        self.client.loop_start()
-    
-    # Escuta as mansagens (cliente)
-    def on_message_client(self, client, userdata, msg):
-
-        #Recebe solicitação de id do cliente
-        if msg.topic == topico_keep_connection:
-            msg = json.loads(str(msg.payload.decode("utf-8")))
-            id = msg['id']
-
-            if id == -1:
-                self.client.publish(topico_keep_connection, json.dumps({
-                    'id': self.params.id
-                }))
+            self.lista_eleicao.append((c_id, peso))
         
-        # Recebe os dados para o início da iteração
-        elif msg.topic == topico_send_gradiente:
-            res = self.executa_aprendizado(json.loads(msg.payload))
-            self.client.publish(topico_recv_gradiente, json.dumps(res, cls=NumpyArrayEncoder))
+        '''
+        # Recebe novo desafio
+        elif msg.topic == topico_challenge:
+            self.cliente_data.transaction_id = data['TransactionID']
+            self.cliente_data.challenge = data['Challenge']
+            self.queue_challenge.put(True)
+
+        # Recebe possível solução            
+        elif msg.topic == topico_solution:
+            client_id = data['id']
+            transaction_id = data['TransactionID']
+            solution = data['Solution']
         
-        # Avalia o resultado final
-        elif msg.topic == topico_avalia_send:
-            res = self.avalia_resultado(json.loads(msg.payload))
-            self.client.publish(topico_avalia_recv, res)
+            self.queue_solution.put((client_id, transaction_id, solution))
+        
+        # Recebe resultado do desafio
+        elif msg.topic == topico_result:
+            client_id = data['ClientID']
+            transaction_id = data['TransactionID']
+            solution = data['Solution']
+            result = data['Result']
+            
+            self.queue_result.put((client_id, transaction_id, solution, result))
+        '''
+
+
+    # Realiza a eleição
+    def eleicao(self):
+        print(f'* Iniciando Eleição')
+
+        v_rand = random.randint(0, 65536)
+        self.lista_eleicao.append((self.cliente_data.id, v_rand))
+
+        time.sleep(4)
+
+        # Envia id e pesos gerado
+        self.client.publish(topico_eleicao, json.dumps({
+            'id': self.cliente_data.id,
+            'peso': v_rand
+        }))
+
+        time.sleep(5)
+
+        mv = max([le[1] for le in self.lista_eleicao])
+        for le in self.lista_eleicao:
+            if le[1] == mv:
+                self.cliente_data.id_lider = le[0]
+        
+        print(f'\n** Resultado da Eleição \nIntegrantes: {self.lista_eleicao} \nID: {self.cliente_data.id} \nID Coordenador: {self.cliente_data.id_lider} \n')
     
+    '''
+    # Espera o desafio ser obtido
+    def wait_challenge(self):
+        return self.queue_challenge.get()
+    
+    # Espera que uma nova solução tenha sido recebida
+    def wait_solution(self):
+        return self.queue_solution.get()
+    
+    # ESpera que um resultado tenha sido recebido
+    def wait_result(self):
+        return self.queue_result.get()
+    '''
