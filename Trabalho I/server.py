@@ -55,7 +55,7 @@ def run():
         evaluate = aprendizado.evaluate(model_weights)
         accuracy = evaluate[2]['accuracy']
         accuracy_list.append((round, accuracy))
-        all_accuracy.append(accuracy)
+        #all_accuracy.append(accuracy)
         
         print(f'-- Round: {round+1} - Accuracy: {accuracy}')
         

@@ -2,14 +2,32 @@ import paho.mqtt.client as mqtt
 from multiprocessing import Queue
 import random
 import json
+from json import JSONEncoder
+import numpy as np
 import time
 
 broker = "localhost"
-topico_anuncio = "sd/lab6/init"
-topico_eleicao = "sd/lab6/voting"
-#topico_solution = "sd/lab6/solution"
-#topico_challenge = 'sd/lab6/challenge'
-#topico_result = 'sd/lab6/result'
+topico_anuncio = "sd/tr2/init"
+topico_eleicao = "sd/tr2/voting"
+topico_send_pesos = "sd/tr2/send/pesos"
+topico_return_pesos = "sd/tr2/return/pesos"
+topico_send_acuracia = 'sd/tr2/send/acuracia'
+topico_return_acuracia = 'sd/tr2/result/acuracia'
+
+
+class NumpyArrayEncoder(JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, np.bool_):
+            return bool(obj)
+        if isinstance(obj, (np.float, np.complexfloating)):
+            return float(obj)
+        if isinstance(obj, np.integer):
+            return int(obj)
+        if isinstance(obj, np.ndarray):
+            return obj.tolist()
+        if isinstance(obj, np.string_):
+            return str(obj)
+        return super(NumpyArrayEncoder, self).default(obj)
 
 class Comunicacao:
 
@@ -21,15 +39,17 @@ class Comunicacao:
         self.lista_eleicao = []
         
         # Usado para aguardat que os dados do 'on_message' tenha sido recebidos e salvos em 'cliente_data'
-        self.queue_challenge = Queue()
-        self.queue_solution = Queue()
-        self.queue_result = Queue()
+        self.queue_return_weights = Queue()
+        self.queue_return_acuracia = Queue()
 
         time.sleep(4)
         self.client.publish(topico_anuncio, json.dumps({
             'id': self.cliente_data.id
         }))
 
+    def set_client_func(self, executar_aprendizado, avaliar_aprendizado):
+        self.executar_aprendizado = executar_aprendizado
+        self.avaliar_aprendizado = avaliar_aprendizado
     
     # Inicia o MQTT
     def inicia_mqtt(self):
@@ -46,9 +66,10 @@ class Comunicacao:
 
         self.client.subscribe(topico_eleicao)
         self.client.subscribe(topico_anuncio)
-        #self.client.subscribe(topico_solution)
-        #self.client.subscribe(topico_challenge)
-        #self.client.subscribe(topico_result)
+        self.client.subscribe(topico_send_pesos)
+        self.client.subscribe(topico_return_pesos)
+        self.client.subscribe(topico_send_acuracia)
+        self.client.subscribe(topico_return_acuracia)
         
         self.client.on_message = self.on_message
         self.client.loop_start()
@@ -73,30 +94,28 @@ class Comunicacao:
 
             self.lista_eleicao.append((c_id, peso))
         
-        '''
-        # Recebe novo desafio
-        elif msg.topic == topico_challenge:
-            self.cliente_data.transaction_id = data['TransactionID']
-            self.cliente_data.challenge = data['Challenge']
-            self.queue_challenge.put(True)
-
-        # Recebe possível solução            
-        elif msg.topic == topico_solution:
-            client_id = data['id']
-            transaction_id = data['TransactionID']
-            solution = data['Solution']
-        
-            self.queue_solution.put((client_id, transaction_id, solution))
-        
-        # Recebe resultado do desafio
-        elif msg.topic == topico_result:
-            client_id = data['ClientID']
-            transaction_id = data['TransactionID']
-            solution = data['Solution']
-            result = data['Result']
+        # Recebe pesos (cliente) e executa aprendizado
+        elif msg.topic == topico_send_pesos:
+            weight = self.executar_aprendizado(json.loads(data['data']))
+            self.client.publish(topico_return_pesos, json.dumps({
+            "id": self.cliente_data.id,
+            "data": json.dumps(weight, cls=NumpyArrayEncoder)
+        }))
             
-            self.queue_result.put((client_id, transaction_id, solution, result))
-        '''
+        
+        # Recebe resultados (server)
+        elif msg.topic == topico_return_pesos and self.cliente_data.id_lider == self.cliente_data.id:
+            self.queue_return_weights.put(json.loads(data['data']))
+
+        elif msg.topic == topico_send_acuracia:
+            acuracia = self.avaliar_aprendizado(json.loads(data['data']))
+            self.client.publish(topico_return_acuracia, json.dumps({
+            "id": self.cliente_data.id,
+            "data": acuracia
+        }))
+        
+        elif msg.topic == topico_return_acuracia:
+            self.queue_return_acuracia.put(data['data'])
 
 
     # Realiza a eleição
@@ -123,16 +142,28 @@ class Comunicacao:
         
         print(f'\n** Resultado da Eleição \nIntegrantes: {self.lista_eleicao} \nID: {self.cliente_data.id} \nID Coordenador: {self.cliente_data.id_lider} \n')
     
-    '''
-    # Espera o desafio ser obtido
-    def wait_challenge(self):
-        return self.queue_challenge.get()
+    # Envia peso para os clientes
+    def enviar_peso(self, params):
+        self.client.publish(topico_send_pesos, json.dumps({
+            "id": self.cliente_data.id,
+            "data": json.dumps(params, cls=NumpyArrayEncoder)
+        }))  
+        return len(self.lista_clientes) -1
+        
+    # Envia acuracia para resultado final
+    def envia_acuracia(self, params):
+        self.client.publish(topico_send_acuracia, json.dumps({
+            "id": self.cliente_data.id,
+            "data": json.dumps(params, cls=NumpyArrayEncoder)
+        }))  
+        return len(self.lista_clientes) -1
     
-    # Espera que uma nova solução tenha sido recebida
-    def wait_solution(self):
-        return self.queue_solution.get()
     
-    # ESpera que um resultado tenha sido recebido
-    def wait_result(self):
-        return self.queue_result.get()
-    '''
+    # Espera um peso para finalizar a iteração (Client -> Server)
+    def wait_return_weights(self):
+        return self.queue_return_weights.get()
+
+
+    # (Client -> Server)
+    def wait_return_acuracia(self):
+        return self.queue_return_acuracia.get()
