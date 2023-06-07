@@ -19,10 +19,8 @@ class ClientesData:
         self.desafio_em_andamento = False
   
   
-# Função para gerar um novo desafio
+# Gerar um novo desafio
 def gerar_desafio(cliente_data, mqtt):
-        #print(f'\n* Gerando Novo Desafio')
-    
         cliente_data.transaction_id += 1
         cliente_data.challenge = random.randint(1, 10)
         cliente_data.winner = -1
@@ -41,7 +39,7 @@ def gerar_desafio(cliente_data, mqtt):
 
 
 def run():
-    # Inicia cliente
+    # Inicia dados de execução do cliente
     cliente_data = ClientesData()
     
     # Inicia comunicação
@@ -56,12 +54,16 @@ def run():
     
     # Inicia execução
     if cliente_data.id == cliente_data.id_lider:
+        # Inicia interface do Coordenador
         interface = InterfaceControlador(cliente_data, lambda func: gerar_desafio(cliente_data, mqtt))
+        
+        # Gera desafio inicial
         gerar_desafio(cliente_data, mqtt)
     else:
+        # Inicia interdace do Minerador
         interface = InterfaceMinerador(cliente_data)
     
-    # Gera um desafio na inicialização
+    # Mantem programa em execução e carrega a interface
     interface.start_loop()
     
 

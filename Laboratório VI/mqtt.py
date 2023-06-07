@@ -12,6 +12,7 @@ topico_result = 'sd/lab6/result'
 
 class Comunicacao:
 
+    # Inicializa compartilhando dados do cliente e classe de resolução da prova de trabalho
     def __init__(self, cliente_data, pt):
         self.cliente_data = cliente_data
         self.lista_clientes = [self.cliente_data.id]
@@ -36,7 +37,7 @@ class Comunicacao:
         self.client.loop_stop()
         self.client.disconnect()
     
-    # Se inscreve nos tópicos (server)
+    # Se inscreve nos tópicos ao iniciar
     def subscribe(self):
 
         self.client.subscribe(topico_eleicao)
@@ -45,11 +46,11 @@ class Comunicacao:
         self.client.on_message = self.on_message
         self.client.loop_start()
         
-    # Inscrições do Coodenador
+    # Inscrições do Coodenador (após eleição)
     def subscribe_server(self):
         self.client.subscribe(topico_solution)
     
-    # Inscrições do Minerador
+    # Inscrições do Minerador (após eleição)
     def subscribe_client(self):
         self.client.subscribe(topico_challenge)
         self.client.subscribe(topico_result)
@@ -74,7 +75,7 @@ class Comunicacao:
 
             self.lista_eleicao.append((c_id, peso))
         
-        # Realiza o desafio
+        # Realiza o desafio (minerador)
         elif msg.topic == topico_challenge:
             self.cliente_data.transaction_id = data['TransactionID']
             self.cliente_data.challenge = data['Challenge']
@@ -95,7 +96,7 @@ class Comunicacao:
             # Envia solução
             self.client.publish(topico_solution, json.dumps(msg))
 
-        # Avalia a solução
+        # Avalia a solução (coordenador)
         elif msg.topic == topico_solution:
             client_id = data['id']
             transaction_id = data['TransactionID']
@@ -153,7 +154,7 @@ class Comunicacao:
                 
                 self.client.publish(topico_result, json.dumps(msg))
         
-        # Recebe resultado do desafio
+        # Recebe resultado do desafio (minerador)
         elif msg.topic == topico_result:
             client_id = data['ClientID']
             transaction_id = data['TransactionID']
@@ -168,7 +169,7 @@ class Comunicacao:
         v_rand = random.randint(0, 65536)
         self.lista_eleicao.append((self.cliente_data.id, v_rand))
 
-        time.sleep(8)
+        time.sleep(10)
 
         # Envia id e pesos gerado
         self.client.publish(topico_eleicao, json.dumps({
@@ -176,6 +177,7 @@ class Comunicacao:
             'peso': v_rand
         }))
 
+        # Aguarda para recepção dos votos
         time.sleep(6)
 
         mv = max([le[1] for le in self.lista_eleicao])
@@ -189,6 +191,7 @@ class Comunicacao:
         else:
             self.subscribe_client()
         
+        # Aguarda para iniciar execução
         time.sleep(2)
         
         print(f'\n** Resultado da Eleição \nIntegrantes: {self.lista_eleicao} \nID: {self.cliente_data.id} \nID Coordenador: {self.cliente_data.id_lider} \n')
