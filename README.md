@@ -69,16 +69,24 @@ Para executar o programa:
 
 
 # LABORATÓRIO VI
-### Experimentar a implementação de comunicação indireta em sistemas distribuídos de maneira que coordenadores são eleitos a cada iteração. É usado  middleware Publish/Subscribe com filas de mensagens.
+### Experimentar a implementação de comunicação indireta em sistemas distribuídos de maneira que coordenadores são eleitos a cada iteração. É usado  middleware Publish/Subscribe com filas de mensagens para a realização de provas de trabalho.
 
 Requisitos: **python** e **pip** instalados
 
-Para executar o programa:
+Para executar o ambiente:
 <ul>
     <li>criar ambiente: <em>python -m venv .venv</em></li>
     <li>ativar ambiente: <em>source .venv/bin/activate</em></li>
     <li>configurar ambiente: <em>pip install -r requirements.txt</em></li>
+    <li>Ubuntu: <em>sudo apt-get install python3-tk</em></li>
 </ul>
+
+Para Executar o programa:
+<ul>
+    <li>execucao: <em>python execucao.py <número de clientes></em></li>
+</ul>
+
+* Video de execução: https://drive.google.com/file/d/1eQEnnretwuErKLVGjtqEtUalcusrEScz/view?usp=sharing
 
 
 # Trabalho I

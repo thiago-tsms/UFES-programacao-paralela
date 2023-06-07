@@ -1,5 +1,4 @@
 import paho.mqtt.client as mqtt
-from multiprocessing import Queue
 import random
 import json
 import time
@@ -13,17 +12,13 @@ topico_result = 'sd/lab6/result'
 
 class Comunicacao:
 
-    def __init__(self, cliente_data):
+    def __init__(self, cliente_data, pt):
         self.cliente_data = cliente_data
         self.lista_clientes = [self.cliente_data.id]
+        self.pt = pt
         self.inicia_mqtt()
-        self.subscribe_server()
+        self.subscribe()
         self.lista_eleicao = []
-        
-        # Usado para aguardat que os dados do 'on_message' tenha sido recebidos e salvos em 'cliente_data'
-        self.queue_challenge = Queue()
-        self.queue_solution = Queue()
-        self.queue_result = Queue()
 
         time.sleep(4)
         self.client.publish(topico_anuncio, json.dumps({
@@ -42,16 +37,22 @@ class Comunicacao:
         self.client.disconnect()
     
     # Se inscreve nos tópicos (server)
-    def subscribe_server(self):
+    def subscribe(self):
 
         self.client.subscribe(topico_eleicao)
         self.client.subscribe(topico_anuncio)
-        self.client.subscribe(topico_solution)
-        self.client.subscribe(topico_challenge)
-        self.client.subscribe(topico_result)
         
         self.client.on_message = self.on_message
         self.client.loop_start()
+        
+    # Inscrições do Coodenador
+    def subscribe_server(self):
+        self.client.subscribe(topico_solution)
+    
+    # Inscrições do Minerador
+    def subscribe_client(self):
+        self.client.subscribe(topico_challenge)
+        self.client.subscribe(topico_result)
 
     # Recebe as mensagens
     def on_message(self, client, userdata, msg):
@@ -73,19 +74,84 @@ class Comunicacao:
 
             self.lista_eleicao.append((c_id, peso))
         
-        # Recebe novo desafio
+        # Realiza o desafio
         elif msg.topic == topico_challenge:
             self.cliente_data.transaction_id = data['TransactionID']
             self.cliente_data.challenge = data['Challenge']
-            self.queue_challenge.put(True)
+            
+            print(f'\n ** Desafio recebido:')
+            print(f'-- TransactionID: {self.cliente_data.transaction_id} \n-- Challenge: {self.cliente_data.challenge} \n')
+            
+            (hash, self.cliente_data.solution) = self.pt.buscar_solucao(self.cliente_data.challenge)
+            
+            print(f'* Solução Encontrada \nSolução: {self.cliente_data.solution} \n')
+        
+            msg = {
+                'id': self.cliente_data.id,
+                'TransactionID': self.cliente_data.transaction_id,
+                'Solution': self.cliente_data.solution,
+            }
+            
+            # Envia solução
+            self.client.publish(topico_solution, json.dumps(msg))
 
-        # Recebe possível solução            
+        # Avalia a solução
         elif msg.topic == topico_solution:
             client_id = data['id']
             transaction_id = data['TransactionID']
             solution = data['Solution']
-        
-            self.queue_solution.put((client_id, transaction_id, solution))
+            
+            print(f'* Solução recebida:')
+            print(f'-- ClientID: {client_id} \n-- TransactionID: {transaction_id} \n-- Solution: {solution}')
+            
+            # Desafio não corrente
+            if self.cliente_data.transaction_id != transaction_id:
+                print(f'-- Desafio não encontrado')
+            
+            # # Desafio já solucionado
+            elif self.cliente_data.winner != -1:
+                print(f'-- Este desafio já foi solucionado [Winner: {self.cliente_data.winner}] \n')
+                
+                msg = {
+                    'id': self.cliente_data.id,
+                    'ClientID': client_id,
+                    'TransactionID': transaction_id,
+                    'Solution': solution,
+                    'Result': -1
+                }
+                
+                self.client.publish(topico_result, json.dumps(msg))
+            
+            # Solução correta
+            elif self.pt.avaliar_hash(self.cliente_data.challenge, self.pt.gerar_hash(solution)):
+                print(f'-- Solução aprovado \n')
+                
+                self.cliente_data.winner = client_id
+                self.cliente_data.solution = solution
+                
+                msg = {
+                    'id': self.cliente_data.id,
+                    'ClientID': client_id,
+                    'TransactionID': transaction_id,
+                    'Solution': solution,
+                    'Result': 1
+                }
+                
+                self.client.publish(topico_result, json.dumps(msg))
+            
+            # Solução incorreta
+            else:
+                print(f'-- Solução reprovado \n')
+                
+                msg = {
+                    'id': self.cliente_data.id,
+                    'ClientID': client_id,
+                    'TransactionID': transaction_id,
+                    'Solution': solution,
+                    'Result': 0
+                }
+                
+                self.client.publish(topico_result, json.dumps(msg))
         
         # Recebe resultado do desafio
         elif msg.topic == topico_result:
@@ -94,8 +160,6 @@ class Comunicacao:
             solution = data['Solution']
             result = data['Result']
             
-            self.queue_result.put((client_id, transaction_id, solution, result))
-
 
     # Realiza a eleição
     def eleicao(self):
@@ -104,7 +168,7 @@ class Comunicacao:
         v_rand = random.randint(0, 65536)
         self.lista_eleicao.append((self.cliente_data.id, v_rand))
 
-        time.sleep(4)
+        time.sleep(8)
 
         # Envia id e pesos gerado
         self.client.publish(topico_eleicao, json.dumps({
@@ -112,23 +176,19 @@ class Comunicacao:
             'peso': v_rand
         }))
 
-        time.sleep(5)
+        time.sleep(6)
 
         mv = max([le[1] for le in self.lista_eleicao])
         for le in self.lista_eleicao:
             if le[1] == mv:
                 self.cliente_data.id_lider = le[0]
         
+        # Se inscreve nos tópicos pertinentes
+        if self.cliente_data.id == self.cliente_data.id_lider:
+            self.subscribe_server()
+        else:
+            self.subscribe_client()
+        
+        time.sleep(2)
+        
         print(f'\n** Resultado da Eleição \nIntegrantes: {self.lista_eleicao} \nID: {self.cliente_data.id} \nID Coordenador: {self.cliente_data.id_lider} \n')
-    
-    # Espera o desafio ser obtido
-    def wait_challenge(self):
-        return self.queue_challenge.get()
-    
-    # Espera que uma nova solução tenha sido recebida
-    def wait_solution(self):
-        return self.queue_solution.get()
-    
-    # ESpera que um resultado tenha sido recebido
-    def wait_result(self):
-        return self.queue_result.get()
