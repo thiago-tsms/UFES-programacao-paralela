@@ -58,6 +58,10 @@ class Aprendizado:
     # Obtem os gradientes
     def get_weights(self):
         return self.model.get_weights()
+
+    # Seta os gradientes
+    def set_weights(self, params):
+        self.model.set_weights(params)
     
     
     # Efetua o aprendizado (com ou sem gradientes)

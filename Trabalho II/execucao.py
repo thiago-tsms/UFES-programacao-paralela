@@ -1,70 +1,119 @@
-from aprendizado import *
 import random
+import time
 
 
-num_clients = None
-input_shape = None
-num_classes = None
-metaAcuracia = None
-nMaxRouds = None
-
-
-class Execucao:
-    def __init__(self, cliente_data, mqtt, params):
+# Realiza tarefa do cliente treinador
+class ClienteTreinador():
+    def __init__(self, cliente_data, mqtt, aprendizado):
         self.cliente_data = cliente_data
         self.mqtt = mqtt
+        self.aprendizado = aprendizado
+        self.mqtt.set_client_func(self.executar_aprendizado, self.avaliar_aprendizado, self.adicionar_pesos)
+    
+    def adicionar_pesos(self, weight):
+        self.aprendizado.set_weights(self.aprendizado.re_shape(weight))
         
-        global num_clients
-        global input_shape
-        global num_classes
-        global metaAcuracia
-        global nMaxRouds
-        
-        (num_clients, input_shape, num_classes, metaAcuracia, nMaxRouds) = params
-        
-        (x_train, y_train, x_test, y_test) = obtem_dados(num_clients)
-        self.aprendizado = Aprendizado(x_train, y_train, x_test, y_test, input_shape, num_classes)
+    def executar_aprendizado(self, weight):
+        if weight:
+            weight = self.aprendizado.re_shape(weight)
+        return self.aprendizado.fit(weight)
 
-
-class Cliente(Execucao):
-    def __init__(self, cliente_data, mqtt, params):
-        super().__init__(cliente_data, mqtt, params)
-        #self.mqtt.set_client_func(self.executar_aprendizado, self.avaliar_aprendizado)
-        print(f"** Cliente -- Round: {self.cliente_data.round} - Grupo: {self.cliente_data.grupo} - Cliente: {self.cliente_data.id}")
-        
-    # def executar_aprendizado(self, weight):
-    #     return self.aprendizado.fit(self.aprendizado.re_shape(weight))
-
-    # def avaliar_aprendizado(self, weight):
-    #     accuracy = self.aprendizado.evaluate(self.aprendizado.re_shape(weight))[2]['accuracy']
-    #     print(f'** Resultado Alcançado: {accuracy} **')
-    #     return accuracy
+    def avaliar_aprendizado(self, weight):
+        accuracy = self.aprendizado.evaluate(self.aprendizado.re_shape(weight))[2]['accuracy']
+        print(f'** Resultado Alcançado: {accuracy} **')
+        return accuracy
 
     def run(self):
-        while True:
-            None
+        print(f"** Cliente ID: {self.cliente_data.id} -- Round: {self.cliente_data.round} - Grupo: {self.cliente_data.grupo}")
+        
+        self.mqtt.aguarda_end_round()
             
 
-class Agregador(Execucao):
-    def __init__(self, cliente_data, mqtt, params):
-        super().__init__(cliente_data, mqtt, params)
-        print(f"** Agregador -- Round: {self.cliente_data.round} - Grupo: {self.cliente_data.grupo} - Cliente: {self.cliente_data.id}")
+# Realiza tarefas do cliente agregador
+class ClienteAgregador():
+    def __init__(self, cliente_data, mqtt, aprendizado):
+        self.cliente_data = cliente_data
+        self.mqtt = mqtt
+        self.aprendizado = aprendizado
     
-    def run(self):
+    
+    # Seleciona os integrantes para fazer parte do round
+    def seleciona_integrantes(self, n_integrantes):
         aux_1 = self.mqtt.lista_clientes.copy()
         aux_1.remove(self.cliente_data.id)
         
-        if len(aux_1) > 3:
-            n = 3
+        if len(aux_1) > n_integrantes:
+            n = n_integrantes
         else:
             n = len(aux_1)
         
-        integrantes = random.sample(aux_1, n)
-        print(integrantes)
-        
+        return random.sample(aux_1, n)
+    
+    
+    def run(self):
+        pesos_recebidos = []
+        id_peso_recebidos = []
+        avaliacao = []
+        id_avaliacao = []
+        print(f"** Agregador ID: {self.cliente_data.id} -- Round: {self.cliente_data.round} - Grupo: {self.cliente_data.grupo}")
+         
         # Envia dados para aprendizado para clientes determinados
-        self.mqtt.enviar_peso(integrantes, self.aprendizado.get_weights())
+        clientes_enviados = self.mqtt.enviar_peso_fit(self.seleciona_integrantes(3), None)
         
+        # Recebe todos os pesos
+        for _ in range(len(clientes_enviados)):
+            (id, weight) = self.mqtt.wait_queue_fit()
+            id_peso_recebidos.append(id)
+            pesos_recebidos.append(self.aprendizado.re_shape(weight))
+        
+        # Efetua a agregação
+        new_weight = self.aprendizado.federated_averaging(pesos_recebidos)
+        
+    
+        ###
+        # AÇÕES DO AGREGADOR CENTRAL
+        ###
+        
+        
+        # Envia pesos agergados
+        #self.mqtt.envia_peso(new_weight)
+        
+        # Envia pesos para avaliação (enviando para todos) / Faz a avaliação global
+        clientes_enviados = self.mqtt.envia_pesos_avaliacao(new_weight)
+        local_evaluate = self.aprendizado.evaluate(new_weight)
+        avaliacao.append(local_evaluate[2]['accuracy'])
+        
+        # Recebe todos os pesos
+        for _ in range(len(clientes_enviados)):
+            (id, accuracy) = self.mqtt.wait_queue_evaluate()
+            id_avaliacao.append(id)
+            avaliacao.append(accuracy)
+        
+        
+        accuracy = sum(avaliacao)/len(avaliacao)
+        
+        time.sleep(2)
+        self.mqtt.finaliza_round()
+        
+        return accuracy
+
+ 
+ # Realiza tarefas do agregador central
+class AgregadorCentral():
+    def __init__(self, cliente_data, mqtt, aprendizado):
+        #self.accuracy_list = accuracy_list
+        print(f"** Agregador Central-- Round: {self.cliente_data.round} - ID: {self.cliente_data.id}")
+        
+        while True:
+            None
+        
+
+
+
+
+
+
+     
         
     #     print(f'* Aprendizado Federado Iniciando')
         
@@ -118,16 +167,7 @@ class Agregador(Execucao):
 
 
     # Escolhe os componentes para executar o aprendizado
-    def escolha_integrantes(self):
-        aux_1 = self.mqtt.lista_clientes.copy()
-        aux_1.remove(self.cliente_data.id)
-        aux_2 = random.sample(aux_1, 3)
- 
-class AgregadorCentral(Execucao):
-    def __init__(self, cliente_data, mqtt, params, accuracy_list):
-        self.accuracy_list = accuracy_list
-        super().__init__(cliente_data, mqtt, params)
-        print(f"** Agregador Central-- Round: {self.cliente_data.round} - ID: {self.cliente_data.id}")
-        
-        while True:
-            None
+    # def escolha_integrantes(self):
+    #     aux_1 = self.mqtt.lista_clientes.copy()
+    #     aux_1.remove(self.cliente_data.id)
+    #     aux_2 = random.sample(aux_1, 3)

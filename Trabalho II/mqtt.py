@@ -1,5 +1,5 @@
 import paho.mqtt.client as mqtt
-#from multiprocessing import Queue
+from multiprocessing import Queue
 import random
 import json
 from json import JSONEncoder
@@ -13,12 +13,13 @@ topico_peso_server_to_client = 'sd/tr2/peso/server_to_client'
 topico_anuncio = "sd/tr2/init"
 topico_eleicao = "sd/tr2/voting"
 
-topico_send_fit_server_to_client = "sd/tr2/send_fit/server_to_client"
+topico_fit_client_to_server = "sd/tr2/fit/client_to_server"
+topico_fit_server_to_client = "sd/tr2/fit/server_to_client"
+topico_weights_server_to_client = "sd/tr2/weights/server_to_client"
+topico_evaluate_client_to_server = "sd/tr2/evaluate/client_to_server"
+topico_evaluate_server_to_client = "sd/tr2/evaluate/client_to_server"
 
-#topico_send_pesos = "sd/tr2/send/pesos"
-#topico_return_pesos = "sd/tr2/return/pesos"
-#topico_send_acuracia = 'sd/tr2/send/acuracia'
-#topico_return_acuracia = 'sd/tr2/result/acuracia'
+topico_end_round = "sd/tr2/end_round"
 
 
 # Serialização de dados JSON
@@ -44,18 +45,20 @@ class Comunicacao:
         self.inicia_mqtt()
         self.lista_eleicao = []
         
-        # Usado para aguardat que os dados do 'on_message' tenha sido recebidos e salvos em 'cliente_data'
-        # self.queue_return_weights = Queue()
-        # self.queue_return_acuracia = Queue()
+        self.queue_end_round = Queue()
+        self.queue_fit = Queue()
+        self.queue_evaluate = Queue()
 
         time.sleep(4)
         self.client.publish(topico_anuncio, json.dumps({
             'id': self.cliente_data.id
         }))
 
-    # def set_client_func(self, executar_aprendizado, avaliar_aprendizado):
-    #     self.executar_aprendizado = executar_aprendizado
-    #     self.avaliar_aprendizado = avaliar_aprendizado
+    # Adiciona funções dos clientes
+    def set_client_func(self, executar_aprendizado, avaliar_aprendizado, adicionar_pesos):
+        self.adicionar_pesos = adicionar_pesos
+        self.executar_aprendizado = executar_aprendizado
+        self.avaliar_aprendizado = avaliar_aprendizado
     
     
     # Inicia o MQTT
@@ -66,15 +69,33 @@ class Comunicacao:
         # Ajusta topicos do grupo
         global topico_anuncio
         global topico_eleicao
+        global topico_end_round
+        global topico_fit_client_to_server
+        global topico_fit_server_to_client
+        global topico_weights_server_to_client
+        global topico_evaluate_client_to_server
+        global topico_evaluate_server_to_client
 
         topico_anuncio = f"{topico_anuncio}_{self.cliente_data.grupo}"
         topico_eleicao = f"{topico_eleicao}_{self.cliente_data.grupo}"
+        topico_end_round = f"{topico_end_round}_{self.cliente_data.grupo}"
+        topico_fit_client_to_server = f"{topico_fit_client_to_server}_{self.cliente_data.grupo}"
+        topico_fit_server_to_client = f"{topico_fit_server_to_client}_{self.cliente_data.grupo}"
+        topico_weights_server_to_client = f"{topico_weights_server_to_client}_{self.cliente_data.grupo}"
+        topico_evaluate_client_to_server = f"{topico_evaluate_client_to_server}_{self.cliente_data.grupo}"
+        topico_evaluate_server_to_client = f"{topico_evaluate_server_to_client}_{self.cliente_data.grupo}"
         
         self.client.subscribe(topico_peso_server_to_client)
+        
         self.client.subscribe(topico_anuncio)
         self.client.subscribe(topico_eleicao)
+        self.client.subscribe(topico_end_round)
         
-        self.client.subscribe(topico_send_fit_server_to_client)
+        self.client.subscribe(topico_fit_client_to_server)
+        self.client.subscribe(topico_fit_server_to_client)
+        self.client.subscribe(topico_weights_server_to_client)
+        self.client.subscribe(topico_evaluate_client_to_server)
+        self.client.subscribe(topico_evaluate_server_to_client)
         
         self.client.on_message = self.on_message
         self.client.loop_start()
@@ -90,7 +111,7 @@ class Comunicacao:
     def on_message(self, client, userdata, msg):
         data = json.loads(str(msg.payload.decode("utf-8")))
         origin_id = data['id']
-        
+               
         # Elimina mensagens da mesma origem
         if origin_id == self.cliente_data.id:
             return
@@ -107,7 +128,7 @@ class Comunicacao:
             self.lista_eleicao.append((c_id, peso))
         
         # Tópicos do agregador
-        elif self.cliente_data.agregador_central == True:
+        elif self.cliente_data.is_agregador_central == True:
             self.agregador_central(msg.topic, origin_id, data)
         
         # Tópicos agregador
@@ -118,30 +139,7 @@ class Comunicacao:
         else:
             self.cliente(msg.topic, origin_id, data)
         
-        # # Recebe pesos (cliente) e executa aprendizado
-        # elif msg.topic == topico_send_pesos:
-        #     weight = self.executar_aprendizado(json.loads(data['data']))
-        #     self.client.publish(topico_return_pesos, json.dumps({
-        #     "id": self.cliente_data.id,
-        #     "data": json.dumps(weight, cls=NumpyArrayEncoder)
-        # }))
-            
         
-        # Recebe resultados (server)
-        # elif msg.topic == topico_return_pesos and self.cliente_data.id_lider == self.cliente_data.id:
-        #     self.queue_return_weights.put(json.loads(data['data']))
-
-        # elif msg.topic == topico_send_acuracia:
-        #     acuracia = self.avaliar_aprendizado(json.loads(data['data']))
-        #     self.client.publish(topico_return_acuracia, json.dumps({
-        #     "id": self.cliente_data.id,
-        #     "data": acuracia
-        # }))
-        
-        # elif msg.topic == topico_return_acuracia:
-        #     self.queue_return_acuracia.put(data['data'])
-
-
     # Realiza a eleição
     def eleicao(self):
         v_rand = random.randint(0, 65536)
@@ -165,33 +163,138 @@ class Comunicacao:
         
         print(f'\n** Resultado da Eleição \nIntegrantes: {self.lista_eleicao} \nID: {self.cliente_data.id} \nID Coordenador: {self.cliente_data.id_lider} \n')
 
+
     # Tarefas do agregador central
     def agregador_central(self, topic, origin_id, data):
         print()
     
+    
     # Tarefas do Agregador
     def agregador(self, topic, origin_id, data):
-        print()
+        if topic == topico_fit_client_to_server:
+            if data['round'] == self.cliente_data.round:
+                self.queue_fit.put((origin_id, json.loads(data['weights'])))
+        
+        elif topic == topico_evaluate_client_to_server:
+            if data['round'] == self.cliente_data.round:
+                self.queue_evaluate.put((origin_id, data['accuracy']))
+    
     
     # Tarefas do Cliente
     def cliente(self, topic, origin_id, data):
-        if topic == topico_send_fit_server_to_client:
+        
+        # Finaliza o round
+        if topic == topico_end_round:
+            if data['round'] == self.cliente_data.round:
+                self.queue_end_round.put(True)
+            else:
+                print(f'Divergencia de round')
+        
+        # Recebe pesos e executa aprendizado
+        elif topic == topico_fit_server_to_client:
+            if data['round'] == self.cliente_data.round:
+                if self.cliente_data.id in data['c_fit']:
+                    weight = data['weights']
+                    if weight == []:
+                        w = None
+                    else:
+                        w = json.loads(weight)
+                    new_weight = self.executar_aprendizado(w)
+                    self.client.publish(topico_fit_client_to_server, json.dumps({
+                        "id": self.cliente_data.id,
+                        "round": self.cliente_data.round,
+                        "weights": json.dumps(new_weight, cls=NumpyArrayEncoder)
+                    }))
+            else:
+                print(f'Divergencia de round')
             
-            # Verifica se este cliente deve realizar esta operação
-            if self.cliente_data.id in data['c_fit']:
-                weights = data['weights']
+        # Recebe novos pesos
+        elif topic == topico_weights_server_to_client:
+            if data['round'] == self.cliente_data.round:
+                weight = data['weights']
+                self.adicionar_pesos(json.loads(weight))
+            else:
+                print(f'Divergencia de round')
+
+        # Recebe pesos e efetua avaliação
+        elif topic == topico_evaluate_server_to_client:
+            if data['round'] == self.cliente_data.round:
+                weight = data['weights']
+                accuracy = self.avaliar_aprendizado(json.loads(weight))
+                self.client.publish(topico_evaluate_client_to_server, json.dumps({
+                    "id": self.cliente_data.id,
+                    "round": self.cliente_data.round,
+                    "accuracy": accuracy
+                }))  
+                
+            else:
+                print(f'Divergencia de round')
+
+    # Aguarda mensagem de fim de round
+    def aguarda_end_round(self):
+        return self.queue_end_round.get()
+
+
+    # Envia os pesos para todos
+    def envia_peso(self, weights):
+        self.client.publish(topico_weights_server_to_client, json.dumps({
+            "id": self.cliente_data.id,
+            "round": self.cliente_data.round,
+            "weights": json.dumps(weights, cls=NumpyArrayEncoder)
+        }))
 
 
     # Servidor agregador envia pesos para os clientes
-    def enviar_peso(self, c_fit, weights):
-        self.client.publish(topico_send_fit_server_to_client, json.dumps({
+    def enviar_peso_fit(self, c_fit, weights):
+        if weights:
+            w = json.dumps(weights, cls=NumpyArrayEncoder)
+        else:
+            w = []
+            
+        self.client.publish(topico_fit_server_to_client, json.dumps({
             "id": self.cliente_data.id,
             "c_fit": c_fit,
             "round": self.cliente_data.round,
-            "weights": json.dumps(weights, cls=NumpyArrayEncoder)
-        }))  
+            "weights": w
+        }))
+        return c_fit
 
-        
+
+    def envia_pesos_avaliacao(self, weights):
+        self.client.publish(topico_evaluate_server_to_client, json.dumps({
+            "id": self.cliente_data.id,
+            "round": self.cliente_data.round,
+            "weights": json.dumps(weights, cls=NumpyArrayEncoder)
+        }))
+        aux_1 = self.lista_clientes.copy()
+        aux_1.remove(self.cliente_data.id)
+        return aux_1
+
+
+    # Envia dados de finalização do turno
+    def finaliza_round(self):
+        self.client.publish(topico_end_round, json.dumps({
+            "id": self.cliente_data.id,
+            "round": self.cliente_data.round
+        }))
+
+
+    def wait_queue_fit(self):
+        return self.queue_fit.get()
+
+    def wait_queue_evaluate(self):
+        return self.queue_evaluate.get()
+
+
+
+
+
+
+
+
+
+
+
     # Envia acuracia para resultado final
     # def envia_acuracia(self, params):
     #     self.client.publish(topico_send_acuracia, json.dumps({
@@ -209,3 +312,22 @@ class Comunicacao:
     # (Client -> Server)
     # def wait_return_acuracia(self):
     #     return self.queue_return_acuracia.get()
+    
+    
+    
+
+    
+            
+        # Recebe resultados (server)
+        # elif msg.topic == topico_return_pesos and self.cliente_data.id_lider == self.cliente_data.id:
+        #     self.queue_return_weights.put(json.loads(data['data']))
+
+        # elif msg.topic == topico_send_acuracia:
+        #     acuracia = self.avaliar_aprendizado(json.loads(data['data']))
+        #     self.client.publish(topico_return_acuracia, json.dumps({
+        #     "id": self.cliente_data.id,
+        #     "data": acuracia
+        # }))
+        
+        # elif msg.topic == topico_return_acuracia:
+        #     self.queue_return_acuracia.put(data['data'])
