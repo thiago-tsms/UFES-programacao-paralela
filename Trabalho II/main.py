@@ -6,13 +6,13 @@ from aprendizado import *
 import time
 
 
-nMaxRouds = 10#int(sys.argv[2])
-meta_acuracia = 1#float(sys.argv[3])
+nMaxRouds = int(sys.argv[4])
+meta_acuracia = float(sys.argv[5])
 accuracy_list = []
 
 input_shape = (28, 28, 1)
 num_classes = 10
-num_clients = 2#int(sys.argv[1])
+num_clients = int(sys.argv[3])
 grupo = int(sys.argv[2])
 
 is_agregador_central = int(sys.argv[1])
@@ -78,14 +78,15 @@ def execucao_clientes(cliente_data, mqtt, aprendizado):
     while len(mqtt.lista_clientes) < num_clients:
         time.sleep(0.5)
     print(f'* Grupo: {cliente_data.grupo} - N° Clientes: {len(mqtt.lista_clientes)}')
-    time.sleep(10)
     
     # Executa o treinamento
     while (current_accuracy < meta_acuracia) and (cliente_data.round < nMaxRouds):
         cliente_data.round = cliente_data.round + 1
         
         # Realiza eleição
-        mqtt.eleicao()
+        mqtt.set_checkpoint()
+        mqtt.eleicao(len(mqtt.lista_clientes))
+        mqtt.set_checkpoint()
         
         # Opera no round
         if cliente_data.id == cliente_data.id_lider:
@@ -94,7 +95,6 @@ def execucao_clientes(cliente_data, mqtt, aprendizado):
             current_accuracy = cliente_treinador.run()
         
         print(f'\n*** CONTROLE:: round: {cliente_data.round}/{nMaxRouds} -- acuracy: {current_accuracy}/{meta_acuracia} ***\n')
-        time.sleep(5)
     
 
 if __name__ == '__main__':

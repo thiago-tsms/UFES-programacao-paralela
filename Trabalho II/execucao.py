@@ -14,13 +14,15 @@ class ClienteTreinador():
         self.aprendizado.set_weights(self.aprendizado.re_shape(weight))
         
     def executar_aprendizado(self, weight):
+        print(f'--> Executando Treino')
         if weight:
             weight = self.aprendizado.re_shape(weight)
         return self.aprendizado.fit(weight)
 
     def avaliar_aprendizado(self, weight):
+        print(f'--> Executando Avaliação')
         accuracy = self.aprendizado.evaluate(self.aprendizado.re_shape(weight))[2]['accuracy']
-        print(f"** Resultado Alcançado: {accuracy} **")
+        print(f"* Resultado Alcançado: {accuracy} **")
         return accuracy
 
     def run(self):
@@ -119,10 +121,10 @@ class ClienteAgregador():
         ###
         
         
-        time.sleep(2)
-        
         # Aguarda fim do round (clientes)
         self.mqtt.finaliza_round(accuracy)
+        
+        time.sleep(1)
         
         return accuracy
 

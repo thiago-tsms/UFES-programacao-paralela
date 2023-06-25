@@ -115,6 +115,9 @@ Para executar a simulação:
 # Trabalho II
 ### Experimentar a implementação de sistemas de comunicação indireta por meio de middleware Publish/Subscribe (Pub/Sub) e Filas de Mensagens (Message Queues) com uso do broker EMQX MQTT para resolução de provas de trabalho, de maneira que não haja coordenadores pré-definidos, eles devem ser elitos a cada iteração.
 
+Requisitos: **python**, **pip** e **broker EMQX** instalados
+* É necessário especificar no broker que o tamanho das mensagens sejam maiores, foi especificado 100mb para essa implementação.
+
 Para executar o ambiente:
 <ul>
     <li>criar ambiente: <em>python -m venv .venv</em></li>
@@ -123,4 +126,6 @@ Para executar o ambiente:
     <li>estar com broker rodando</li>
 </ul>
 
-executando programa: python execucao.py <número de clientes> <número máximo de rounds> <meta de acuracia (0-1)>
+executando programa: python main.py <agregador(1)/ clientes(0)> <grupo> <número de clientes> <número máximo de rounds> <meta de acuracia float(0-1)>
+executando treinamento (use o script): sh run.sh <número de clientes (em cada um dos grupos)> <máximo de rounds> <meta de acuracia float(0-1)>
+executando esperimento: sh run_all.sh

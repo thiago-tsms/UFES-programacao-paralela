@@ -21,8 +21,9 @@ topico_fit_client_to_server = "sd/tr2/fit/client_to_server"
 topico_fit_server_to_client = "sd/tr2/fit/server_to_client"
 topico_weights_server_to_client = "sd/tr2/weights/server_to_client"
 topico_evaluate_client_to_server = "sd/tr2/evaluate/client_to_server"
-topico_evaluate_server_to_client = "sd/tr2/evaluate/client_to_server"
+topico_evaluate_server_to_client = "sd/tr2/evaluate/server_to_client"
 
+topico_checkpoint = 'sd/tr2/agregador/end_round'
 topico_end_round = "sd/tr2/end_round"
 
 
@@ -48,6 +49,7 @@ class Comunicacao:
         self.lista_clientes = [self.cliente_data.id]
         self.inicia_mqtt()
         self.lista_eleicao = []
+        self.checkpoint_list = []
         
         self.queue_end_round = Queue()
         self.queue_agregador_end_round = Queue()
@@ -77,6 +79,7 @@ class Comunicacao:
         # Ajusta topicos do grupo
         global topico_anuncio
         global topico_eleicao
+        global topico_checkpoint
         global topico_end_round
         global topico_fit_client_to_server
         global topico_fit_server_to_client
@@ -86,6 +89,7 @@ class Comunicacao:
         
         topico_anuncio = f"{topico_anuncio}_{self.cliente_data.grupo}"
         topico_eleicao = f"{topico_eleicao}_{self.cliente_data.grupo}"
+        topico_checkpoint = f"{topico_checkpoint}_{self.cliente_data.grupo}"
         topico_end_round = f"{topico_end_round}_{self.cliente_data.grupo}"
         topico_fit_client_to_server = f"{topico_fit_client_to_server}_{self.cliente_data.grupo}"
         topico_fit_server_to_client = f"{topico_fit_server_to_client}_{self.cliente_data.grupo}"
@@ -93,21 +97,23 @@ class Comunicacao:
         topico_evaluate_client_to_server = f"{topico_evaluate_client_to_server}_{self.cliente_data.grupo}"
         topico_evaluate_server_to_client = f"{topico_evaluate_server_to_client}_{self.cliente_data.grupo}"
         
-        self.client.subscribe(topico_agregador_evaluate_client_to_server)
-        self.client.subscribe(topico_agregador_evaluate_server_to_client)
-        self.client.subscribe(topico_agregador_end_round)
-        self.client.subscribe(topico_agregador_accuracy_client_to_server)
-        self.client.subscribe(topico_agregador_accuracy_server_to_client)
+        self.client.subscribe(topico_agregador_evaluate_client_to_server, 1)
+        self.client.subscribe(topico_agregador_evaluate_server_to_client, 1)
+        self.client.subscribe(topico_agregador_end_round, 1)
+        self.client.subscribe(topico_agregador_accuracy_client_to_server, 1)
+        self.client.subscribe(topico_agregador_accuracy_server_to_client, 1)
         
-        self.client.subscribe(topico_anuncio)
-        self.client.subscribe(topico_eleicao)
-        self.client.subscribe(topico_end_round)
+        self.client.subscribe(topico_anuncio, 1)
+        self.client.subscribe(topico_eleicao, 1)
+        self.client.subscribe(topico_eleicao, 1)
+        self.client.subscribe(topico_checkpoint, 1)
+        self.client.subscribe(topico_end_round, 1)
         
-        self.client.subscribe(topico_fit_client_to_server)
-        self.client.subscribe(topico_fit_server_to_client)
-        self.client.subscribe(topico_weights_server_to_client)
-        self.client.subscribe(topico_evaluate_client_to_server)
-        self.client.subscribe(topico_evaluate_server_to_client)
+        self.client.subscribe(topico_fit_client_to_server, 1)
+        self.client.subscribe(topico_fit_server_to_client, 1)
+        self.client.subscribe(topico_weights_server_to_client, 1)
+        self.client.subscribe(topico_evaluate_client_to_server, 1)
+        self.client.subscribe(topico_evaluate_server_to_client, 1)
         
         self.client.on_message = self.on_message
         self.client.loop_start()
@@ -123,6 +129,12 @@ class Comunicacao:
     def on_message(self, client, userdata, msg):
         data = json.loads(str(msg.payload.decode("utf-8")))
         origin_id = data['id']
+        
+        # Recebe mensagem de sincronia
+        if msg.topic == topico_checkpoint:
+            c_id = data['id']
+            self.checkpoint_list.append(c_id)
+            return
                
         # Elimina mensagens da mesma origem
         if origin_id == self.cliente_data.id:
@@ -164,20 +176,22 @@ class Comunicacao:
                 
         
     # Realiza a eleição
-    def eleicao(self):
+    def eleicao(self, n_integrantes):
         v_rand = random.randint(0, 65536)
         self.lista_eleicao = []    
         self.lista_eleicao.append((self.cliente_data.id, v_rand))
-
+        
         time.sleep(2)
-
-        # Envia id e pesos gerado
+        
+        # Envia id e pesos gerado (voto)
         self.client.publish(topico_eleicao, json.dumps({
             'id': self.cliente_data.id,
             'peso': v_rand
         }))
 
-        time.sleep(2)
+        # Aguarda todos votarem
+        while(n_integrantes > len(self.lista_eleicao)):
+            time.sleep(0.5)
 
         mv = max([le[1] for le in self.lista_eleicao])
         for le in self.lista_eleicao:
@@ -186,7 +200,20 @@ class Comunicacao:
         
         print(f'\n** Resultado da Eleição \nIntegrantes: {self.lista_eleicao} \nID: {self.cliente_data.id} \nID Coordenador: {self.cliente_data.id_lider} \n')
 
-
+    # Aguarda integrantes
+    def set_checkpoint(self):
+        print(f'--> checkpoint <--')
+        self.client.publish(topico_checkpoint, json.dumps({
+            "id": self.cliente_data.id,
+        }))
+        
+        while(len(self.checkpoint_list) < (len(self.lista_clientes))):
+            time.sleep(0.5)
+        
+        print(f'<-- checkpoint -->')
+        self.checkpoint_list = []
+        return
+        
     # Tarefas do agregador central
     def agregador_central(self, topic, origin_id, data):
         if topic == topico_agregador_evaluate_client_to_server:
