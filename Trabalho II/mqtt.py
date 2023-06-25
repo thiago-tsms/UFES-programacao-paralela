@@ -141,16 +141,27 @@ class Comunicacao:
         
         # Tópicos do agregador
         elif self.cliente_data.is_agregador_central == True:
-            self.agregador_central(msg.topic, origin_id, data)
+            if data['round'] == self.cliente_data.round:
+                self.agregador_central(msg.topic, origin_id, data)
+            else:
+                print(f'Divergencia de round')
+
         
         # Tópicos agregador
         elif self.cliente_data.id == self.cliente_data.id_lider:
-            self.agregador(msg.topic, origin_id, data)
+            if data['round'] == self.cliente_data.round:
+                self.agregador(msg.topic, origin_id, data)
+            else:
+                print(f'Divergencia de round')
+            
         
         # Tópicos cliente
         else:
-            self.cliente(msg.topic, origin_id, data)
-        
+            if data['round'] == self.cliente_data.round:
+                self.cliente(msg.topic, origin_id, data)
+            else:
+                print(f'Divergencia de round')
+                
         
     # Realiza a eleição
     def eleicao(self):
@@ -179,31 +190,25 @@ class Comunicacao:
     # Tarefas do agregador central
     def agregador_central(self, topic, origin_id, data):
         if topic == topico_agregador_evaluate_client_to_server:
-            if data['round'] == self.cliente_data.round:
-                self.queue_agregador_federated_averaging.put((origin_id, json.loads(data['weights'])))
+            self.queue_agregador_federated_averaging.put((origin_id, json.loads(data['weights'])))
         
         elif topic == topico_agregador_accuracy_client_to_server:
-            if data['round'] == self.cliente_data.round:
-                self.queue_agregador_accuracy.put((origin_id, json.loads(data['accuracy'])))
+            self.queue_agregador_accuracy.put((origin_id, data['accuracy']))
         
     
     # Tarefas do Agregador
     def agregador(self, topic, origin_id, data):
         if topic == topico_fit_client_to_server:
-            if data['round'] == self.cliente_data.round:
-                self.queue_fit.put((origin_id, json.loads(data['weights'])))
+            self.queue_fit.put((origin_id, json.loads(data['weights'])))
         
         elif topic == topico_evaluate_client_to_server:
-            if data['round'] == self.cliente_data.round:
-                self.queue_evaluate.put((origin_id, data['accuracy']))
+            self.queue_evaluate.put((origin_id, data['accuracy']))
                 
         elif topic == topico_agregador_evaluate_server_to_client:
-             if data['round'] == self.cliente_data.round:
-                self.queue_agregador_federated_averaging_return.put((origin_id, json.loads(data['weights']), data['accuracy']))
+            self.queue_agregador_federated_averaging_return.put((origin_id, json.loads(data['weights']), data['accuracy']))
         
         elif topic == topico_agregador_end_round:
-            if data['round'] == self.cliente_data.round:
-                self.queue_agregador_end_round.put((origin_id, json.loads(data['weights']), data['accuracy']))
+            self.queue_agregador_end_round.put((origin_id, data['accuracy']))
     
     
     # Tarefas do Cliente
@@ -211,53 +216,38 @@ class Comunicacao:
         
         # Finaliza o round
         if topic == topico_end_round:
-            if data['round'] == self.cliente_data.round:
-                self.queue_end_round.put(True)
-            elif topic == topico_end_round:
-                if data['round'] == self.cliente_data.round:
-                    self.queue_end_round.put((origin_id, json.loads(data['weights']), data['accuracy']))
-            else:
-                print(f'Divergencia de round')
+                self.queue_end_round.put((origin_id, data['accuracy']))
         
         # Recebe pesos e executa aprendizado
         elif topic == topico_fit_server_to_client:
-            if data['round'] == self.cliente_data.round:
-                if self.cliente_data.id in data['c_fit']:
-                    weight = data['weights']
-                    if weight == []:
-                        w = None
-                    else:
-                        w = json.loads(weight)
-                    new_weight = self.executar_aprendizado(w)
-                    self.client.publish(topico_fit_client_to_server, json.dumps({
-                        "id": self.cliente_data.id,
-                        "round": self.cliente_data.round,
-                        "weights": json.dumps(new_weight, cls=NumpyArrayEncoder)
-                    }))
-            else:
-                print(f'Divergencia de round')
+            if self.cliente_data.id in data['c_fit']:
+                weight = data['weights']
+                if weight == []:
+                    w = None
+                else:
+                    w = json.loads(weight)
+                new_weight = self.executar_aprendizado(w)
+                self.client.publish(topico_fit_client_to_server, json.dumps({
+                    "id": self.cliente_data.id,
+                    "round": self.cliente_data.round,
+                    "weights": json.dumps(new_weight, cls=NumpyArrayEncoder)
+                }))
             
         # Recebe novos pesos
         elif topic == topico_weights_server_to_client:
-            if data['round'] == self.cliente_data.round:
-                weight = data['weights']
-                self.adicionar_pesos(json.loads(weight))
-            else:
-                print(f'Divergencia de round')
+            weight = data['weights']
+            self.adicionar_pesos(json.loads(weight))
 
         # Recebe pesos e efetua avaliação
         elif topic == topico_evaluate_server_to_client:
-            if data['round'] == self.cliente_data.round:
-                weight = data['weights']
-                accuracy = self.avaliar_aprendizado(json.loads(weight))
-                self.client.publish(topico_evaluate_client_to_server, json.dumps({
-                    "id": self.cliente_data.id,
-                    "round": self.cliente_data.round,
-                    "accuracy": accuracy
-                }))  
+            weight = data['weights']
+            accuracy = self.avaliar_aprendizado(json.loads(weight))
+            self.client.publish(topico_evaluate_client_to_server, json.dumps({
+                "id": self.cliente_data.id,
+                "round": self.cliente_data.round,
+                "accuracy": accuracy
+            }))  
                 
-            else:
-                print(f'Divergencia de round')
 
     # Aguarda mensagem de fim de round (Clientes)
     def aguarda_end_round(self):

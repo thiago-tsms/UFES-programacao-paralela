@@ -20,13 +20,13 @@ class ClienteTreinador():
 
     def avaliar_aprendizado(self, weight):
         accuracy = self.aprendizado.evaluate(self.aprendizado.re_shape(weight))[2]['accuracy']
-        print(f'** Resultado Alcançado: {accuracy} **')
+        print(f"** Resultado Alcançado: {accuracy} **")
         return accuracy
 
     def run(self):
         print(f"** Cliente ID: {self.cliente_data.id} -- Round: {self.cliente_data.round} - Grupo: {self.cliente_data.grupo}")
         
-        accuracy = self.mqtt.aguarda_end_round()[2]['accuracy']
+        (id, accuracy) = self.mqtt.aguarda_end_round()
         
         return accuracy
             
@@ -76,8 +76,8 @@ class ClienteAgregador():
         # INICIO -- AGREGADOR CENTRAL
         ###
         
-        self.mqtt.envia_pesos_agergador_avaliacao(new_weight)
-        (origin_id, new_weight, accuracy) = self.wait_queue_agregador_federated_averaging_return()
+        self.mqtt.envia_pesos_agregador_avaliacao(new_weight)
+        (origin_id, new_weight, accuracy) = self.mqtt.wait_queue_agregador_federated_averaging_return()
         #avaliacao.append(accuracy[2]['accuracy'])
         new_weight = self.aprendizado.re_shape(new_weight)
         self.aprendizado.set_weights(new_weight)
@@ -101,10 +101,9 @@ class ClienteAgregador():
             id_avaliacao.append(id)
             avaliacao.append(accuracy)
         
-        aux = [a[2]['accuracy'] for a in avaliacao]
-        accuracy = sum(aux)/len(aux)
-        
-        
+        accuracy = sum(avaliacao)/len(avaliacao)
+
+
         ###
         # INICIO -- AGREGADOR CENTRAL
         ###
@@ -113,11 +112,12 @@ class ClienteAgregador():
         self.mqtt.envia_accuracy_agregador(accuracy)
         
         # Recebe accuracy final do round
-        accuracy = self.mqtt.aguarda_agregador_end_round()[2]['accuracy']
+        (id, accuracy) = self.mqtt.aguarda_agregador_end_round()
         
         ###
         # FIM -- AGREGADOR CENTRAL
         ###
+        
         
         time.sleep(2)
         
@@ -128,37 +128,42 @@ class ClienteAgregador():
 
  
  # Realiza tarefas do agregador central
+
+# Realiza operações do agregador central
 class AgregadorCentral():
     def __init__(self, cliente_data, mqtt, aprendizado):
         self.cliente_data = cliente_data
         self.mqtt = mqtt
         self.aprendizado = aprendizado
         
-        print(f"** Agregador Central-- Round: {self.cliente_data.round} - ID: {self.cliente_data.id}")
+        print(f"** Agregador Central-- Round: {self.cliente_data.round + 1} - ID: {self.cliente_data.id}")
+    
+    def run(self):
+        self.cliente_data.round = self.cliente_data.round + 1
+        pesos_recebidos = []
+        avaliacao = []
         
-        while True:
-            cliente_data.round = cliente_data.round + 1
-            pesos_recebidos = []
-            avaliacao = []
-            
-            # Aguarda os pesos para agregação
-            for _ in range(1):
-                weight = self.wait_queue_agregador_federated_averaging()
-                pesos_recebidos.append(self.aprendizado.re_shape(weight))
-            
-            # Efetua a agregação dos pesos
-            new_weight = self.aprendizado.federated_averaging(pesos_recebidos)
-            local_evaluate = self.aprendizado.evaluate(new_weight)
-            
-            # Envia os pesos
-            self.mqtt.devolve_pesos_agergador_avaliacao(new_weight, local_evaluate)
-            
-            # Receba a avaliação dos clientes agregadores
-            for _ in range(1):
-                avaliacao.append(self.mqtt.wait_queue_agregador_accuracy())
-            
-            aux = [a[2]['accuracy'] for a in avaliacao]
-            accuracy = sum(aux)/len(aux)
-            
-            # Envia a avaliação para os clientes agregadores e finaliza o round
-            self.mqtt.finaliza_round_servidor(accuracy)
+        # Aguarda os pesos para agregação
+        for _ in range(2):
+            (origin_id, weight) = self.mqtt.wait_queue_agregador_federated_averaging()
+            pesos_recebidos.append(self.aprendizado.re_shape(weight))
+        
+        # Efetua a agregação dos pesos
+        new_weight = self.aprendizado.federated_averaging(pesos_recebidos)
+        local_evaluate = self.aprendizado.evaluate(new_weight)
+        
+        # Envia os pesos
+        self.mqtt.devolve_pesos_agregador_avaliacao(new_weight, local_evaluate)
+        
+        # Receba a avaliação dos clientes agregadores
+        for _ in range(2):
+            (origin_id, accuracy) = self.mqtt.wait_queue_agregador_accuracy()
+            avaliacao.append(accuracy)
+        
+        avaliacao.append(local_evaluate[2]['accuracy'])
+        accuracy = sum(avaliacao)/len(avaliacao)
+        
+        # Envia a avaliação para os clientes agregadores e finaliza o round
+        self.mqtt.finaliza_round_servidor(accuracy)
+    
+        return accuracy

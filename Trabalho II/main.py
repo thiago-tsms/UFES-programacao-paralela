@@ -1,3 +1,4 @@
+import sys
 import random
 from mqtt import *
 from execucao import *
@@ -12,9 +13,9 @@ accuracy_list = []
 input_shape = (28, 28, 1)
 num_classes = 10
 num_clients = 2#int(sys.argv[1])
-grupo = 1
+grupo = int(sys.argv[2])
 
-is_agregador_central = False
+is_agregador_central = int(sys.argv[1])
 
 
 # Informações do cliente
@@ -42,14 +43,26 @@ def run():
     if cliente_data.is_agregador_central is False:
         execucao_clientes(cliente_data, mqtt, aprendizado)
     else:
-        execucao_agregador_central()
+        execucao_agregador_central(cliente_data, mqtt, aprendizado)
     
     # Finaliza o MQTT
     mqtt.finalizar_mqtt()
         
         
 def execucao_agregador_central(cliente_data, mqtt, aprendizado):
+    current_accuracy = 0
+    end_resul = []
     agregador_central = AgregadorCentral(cliente_data, mqtt, aprendizado)
+    
+    while (current_accuracy < meta_acuracia) and (cliente_data.round < nMaxRouds):
+        current_accuracy = agregador_central.run()
+        end_resul.append((cliente_data.round, current_accuracy))
+        print(f'\n*** CONTROLE:: round: {cliente_data.round}/{nMaxRouds} -- acuracy: {current_accuracy}/{meta_acuracia} ***\n')
+    
+    with open(f'results/result_{num_clients}.csv', "w") as arquivo:
+        for a in end_resul:
+            arquivo.write(f'{a[0]};{a[1]}\n')
+        
 
 
 def execucao_clientes(cliente_data, mqtt, aprendizado):
@@ -68,7 +81,7 @@ def execucao_clientes(cliente_data, mqtt, aprendizado):
     time.sleep(10)
     
     # Executa o treinamento
-    while current_accuracy < meta_acuracia:
+    while (current_accuracy < meta_acuracia) and (cliente_data.round < nMaxRouds):
         cliente_data.round = cliente_data.round + 1
         
         # Realiza eleição
@@ -78,11 +91,16 @@ def execucao_clientes(cliente_data, mqtt, aprendizado):
         if cliente_data.id == cliente_data.id_lider:
             current_accuracy = cliente_agregador.run()
         else:
-            cliente_treinador.run()
+            current_accuracy = cliente_treinador.run()
         
-        print(current_accuracy)
+        print(f'\n*** CONTROLE:: round: {cliente_data.round}/{nMaxRouds} -- acuracy: {current_accuracy}/{meta_acuracia} ***\n')
         time.sleep(5)
     
 
 if __name__ == '__main__':
+    if is_agregador_central == 0:
+        is_agregador_central = False
+    else:
+        is_agregador_central = True
+    
     run()   
