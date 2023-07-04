@@ -69,16 +69,24 @@ Para executar o programa:
 
 
 # LABORATÓRIO VI
-### Experimentar a implementação de comunicação indireta em sistemas distribuídos de maneira que coordenadores são eleitos a cada iteração. É usado  middleware Publish/Subscribe com filas de mensagens.
+### Experimentar a implementação de comunicação indireta em sistemas distribuídos de maneira que coordenadores são eleitos a cada iteração. É usado  middleware Publish/Subscribe com filas de mensagens para a realização de provas de trabalho.
 
 Requisitos: **python** e **pip** instalados
 
-Para executar o programa:
+Para executar o ambiente:
 <ul>
     <li>criar ambiente: <em>python -m venv .venv</em></li>
     <li>ativar ambiente: <em>source .venv/bin/activate</em></li>
     <li>configurar ambiente: <em>pip install -r requirements.txt</em></li>
+    <li>Ubuntu: <em>sudo apt-get install python3-tk</em></li>
 </ul>
+
+Para Executar o programa:
+<ul>
+    <li>execucao: <em>python execucao.py <número de clientes></em></li>
+</ul>
+
+* Video de execução: https://drive.google.com/file/d/1eQEnnretwuErKLVGjtqEtUalcusrEScz/view?usp=sharing
 
 
 # Trabalho I
@@ -107,10 +115,17 @@ Para executar a simulação:
 # Trabalho II
 ### Experimentar a implementação de sistemas de comunicação indireta por meio de middleware Publish/Subscribe (Pub/Sub) e Filas de Mensagens (Message Queues) com uso do broker EMQX MQTT para resolução de provas de trabalho, de maneira que não haja coordenadores pré-definidos, eles devem ser elitos a cada iteração.
 
-Para executar o programa:
+Requisitos: **python**, **pip** e **broker EMQX** instalados
+* É necessário especificar no broker que o tamanho das mensagens sejam maiores, foi especificado 100mb para essa implementação.
+
+Para executar o ambiente:
 <ul>
     <li>criar ambiente: <em>python -m venv .venv</em></li>
     <li>ativar ambiente: <em>source .venv/bin/activate</em></li>
     <li>configurar ambiente: <em>pip install -r requirements.txt</em></li>
     <li>estar com broker rodando</li>
 </ul>
+
+executando programa: python main.py <agregador(1)/ clientes(0)> <grupo> <número de clientes> <número máximo de rounds> <meta de acuracia float(0-1)>
+executando treinamento (use o script): sh run.sh <número de clientes (em cada um dos grupos)> <máximo de rounds> <meta de acuracia float(0-1)>
+executando esperimento: sh run_all.sh
