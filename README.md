@@ -89,6 +89,18 @@ Para Executar o programa:
 * Video de execução: https://drive.google.com/file/d/1eQEnnretwuErKLVGjtqEtUalcusrEScz/view?usp=sharing
 
 
+# LABORATÓRIO VII
+
+Requisitos: **python** e **pip** instalados
+
+Para executar o ambiente:
+<ul>
+    <li>criar ambiente: <em>python -m venv .venv</em></li>
+    <li>ativar ambiente: <em>source .venv/bin/activate</em></li>
+    <li>configurar ambiente: <em>pip install -r requirements.txt</em></li>
+</ul>
+
+
 # Trabalho I
 ### Experimentar a implementação de sistemas de comunicação indireta por meio de middleware Publish/Subscribe (Pub/Sub) e Filas de Mensagens (Message Queues) com uso do broker EMQX MQTT para resolução de provas de trabalho.
 
