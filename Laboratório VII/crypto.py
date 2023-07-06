@@ -103,7 +103,12 @@ class Security():
             return False
     
     # Gera um certificado digital
-    def gerar_certificado_digital(self, id):
+    def gerar_certificado_digital(self, id, public_key):
+        pk = serialization.load_pem_public_key(
+            bytes.fromhex(public_key),
+            backend=default_backend(),
+        )
+
         subject = issuer = x509.Name([
             x509.NameAttribute(NameOID.USER_ID, str(id)),
             x509.NameAttribute(NameOID.COUNTRY_NAME, u"BR"),
@@ -116,7 +121,7 @@ class Security():
         cert_builder = x509.CertificateBuilder()
         cert_builder = cert_builder.subject_name(subject)
         cert_builder = cert_builder.issuer_name(issuer)
-        cert_builder = cert_builder.public_key(self.__public_key)
+        cert_builder = cert_builder.public_key(pk)
         cert_builder = cert_builder.serial_number(x509.random_serial_number())
         cert_builder = cert_builder.not_valid_before(datetime.datetime.utcnow())
         cert_builder = cert_builder.not_valid_after(datetime.datetime.utcnow() + datetime.timedelta(days=365))
@@ -134,3 +139,21 @@ class Security():
             return True
         else:
             return False
+    
+    # Obter chave a partir do certificado
+    def obter_public_key_certificado_digital(self, certificate):
+        # loaded_certificate = x509.load_pem_x509_certificate(certificate, default_backend())
+
+        # public_key = loaded_certificate.public_key()
+        # if isinstance(public_key, rsa.RSAPublicKey):
+        #     modulus = public_key.public_numbers().n
+        #     exponent = public_key.public_numbers().e
+        #     public_key_hex = hex(modulus)[2:]  # Remover o prefixo '0x'
+        #     #print("Chave pública (hexadecimal): ", public_key_hex)
+        # else:
+        #     print("Chave pública não é do tipo RSA.")
+
+        return (x509.load_pem_x509_certificate(certificate, default_backend())).public_key().public_bytes(
+                encoding=serialization.Encoding.PEM, 
+                format=serialization.PublicFormat.SubjectPublicKeyInfo
+            ).hex()
