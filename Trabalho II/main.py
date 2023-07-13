@@ -73,6 +73,8 @@ def execucao_clientes(cliente_data, mqtt, aprendizado):
     cliente_treinador = ClienteTreinador(cliente_data, mqtt, aprendizado)
     cliente_agregador = ClienteAgregador(cliente_data, mqtt, aprendizado)
     
+    time.sleep(15)
+    
     # Aguarda por um tempo todos os clientes estarem disponíveis
     print(f'* Aguardando Clientes')
     while len(mqtt.lista_clientes) < num_clients:
