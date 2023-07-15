@@ -54,6 +54,7 @@ def execucao_agregador_central(cliente_data, mqtt, aprendizado):
     end_resul = []
     agregador_central = AgregadorCentral(cliente_data, mqtt, aprendizado)
     
+    # Mantem a execução até atingir a meta ou o numero máximo do rounds
     while (current_accuracy < meta_acuracia) and (cliente_data.round < nMaxRouds):
         current_accuracy = agregador_central.run()
         end_resul.append((cliente_data.round, current_accuracy))
@@ -81,7 +82,7 @@ def execucao_clientes(cliente_data, mqtt, aprendizado):
         time.sleep(0.5)
     print(f'* Grupo: {cliente_data.grupo} - N° Clientes: {len(mqtt.lista_clientes)}')
     
-    # Executa o treinamento
+    # Mantem a execução até atingir a meta ou o numero máximo do rounds
     while (current_accuracy < meta_acuracia) and (cliente_data.round < nMaxRouds):
         cliente_data.round = cliente_data.round + 1
         
