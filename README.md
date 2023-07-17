@@ -129,6 +129,7 @@ Para executar a simulação:
 
 Requisitos: **python**, **pip** e **broker EMQX** instalados
 * É necessário especificar no broker que o tamanho das mensagens sejam maiores, foi especificado 100mb para essa implementação.
+* Video de execução: https://drive.google.com/file/d/1yDZIg-eKBro833XEWlLX3vrpMEFqe9C7/view?usp=sharing
 
 Para executar o ambiente:
 <ul>

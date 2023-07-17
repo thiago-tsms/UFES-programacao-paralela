@@ -49,12 +49,15 @@ def run():
     # Inicia comunicação
     mqtt = Comunicacao(cliente_data, ProvaTrabalho())
     mqtt.subscribe_execucao()
-    time.sleep(5)
-    mqtt.faz_anuncio()
+    
+    time.sleep(3)
     
     print(f'* Aguardando Clientes')
     while len(mqtt.lista_clientes) < nClients:
-        time.sleep(0.5)
+        mqtt.faz_anuncio()
+        print('start')
+        time.sleep(3)
+    mqtt.faz_anuncio()
 
     msg = {
         'id': cliente_data.id,

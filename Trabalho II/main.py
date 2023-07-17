@@ -79,7 +79,7 @@ def execucao_clientes(cliente_data, mqtt, aprendizado):
     # Aguarda por um tempo todos os clientes estarem disponíveis
     print(f'* Aguardando Clientes')
     while len(mqtt.lista_clientes) < num_clients:
-        time.sleep(0.5)
+        time.sleep(2)
     print(f'* Grupo: {cliente_data.grupo} - N° Clientes: {len(mqtt.lista_clientes)}')
     
     # Mantem a execução até atingir a meta ou o numero máximo do rounds

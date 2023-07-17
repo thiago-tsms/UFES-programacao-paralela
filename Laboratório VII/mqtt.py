@@ -81,9 +81,9 @@ class Comunicacao:
             self.cliente_data.lista_certificados.append((node_id, cert))
 
             msg = {
-            'id': self.cliente_data.id,
-            'NodeId': node_id,
-            'Cert': cert.decode('utf-8')
+                'id': self.cliente_data.id,
+                'NodeId': node_id,
+                'Cert': cert.decode('utf-8')
             }
             self.client.publish(topico_cert, json.dumps(msg))
 
@@ -98,7 +98,9 @@ class Comunicacao:
 
         # Recebe id de novo integrante
         elif msg.topic == topico_anuncio:
-            self.lista_clientes.append(origin_id)
+            if not (origin_id in self.lista_clientes):            
+                self.lista_clientes.append(origin_id)
+            print(self.lista_clientes)
         
         # Recebe id e pesos da eleição
         elif msg.topic == topico_eleicao:
