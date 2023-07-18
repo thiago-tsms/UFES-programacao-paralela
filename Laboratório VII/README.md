@@ -27,17 +27,17 @@ Para executar o ambiente:
 * ativar ambiente: source .venv/bin/activate
 * configurar ambiente: pip install -r requirements.txt
 
+Para executar o trabalho, após realizar os passos anteriores, execute em janelas do terminal distintas:
+
+* certificador.py: inicializa a autoridade certificadora;
+* execucao.py: inicializa os participantes e a simulação de mineração. 
+
 # Detalhes de Implementação 
 
 As bibliotecas principais utilizadas para esse trabalho são:
 
 * [cryptography](https://pypi.org/project/cryptography/): funções de criptografia e hash para a assinatura de mensagens;
 * [paho-mqtt](https://pypi.org/project/paho-mqtt/): client para o mqtt.
-
-Para executar o trabalho realize os passos da seção anterior e em seguida execute em janelas do terminal distintas:
-
-* certificador.py: inicializa a autoridade certificadora;
-* execucao.py: inicializa os participantes e a simulação de mineração. 
 
 # Resultados e Discussões
 
