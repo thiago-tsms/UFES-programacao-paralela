@@ -29,7 +29,10 @@ Para executar o ambiente:
 
 # Detalhes de Implementação 
 
-...
+As bibliotecas principais utilizadas para esse trabalho são:
+
+* [cryptography](https://pypi.org/project/cryptography/): funções de criptografia e assinatura de mensagens;
+* [paho-mqtt](https://pypi.org/project/paho-mqtt/): client para o mqtt.
 
 # Resultados e Discussões
 
