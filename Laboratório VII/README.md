@@ -15,7 +15,7 @@ assimétricas, criptografia e descriptografia, assinatura e geração de certifi
 
 # Introdução
 
-O objetivo desse trabalho é implementar uma simulação simples de um cenário de mineração de criptomoedas utilizando o modelo Publish/Subscribe para a comunicação entre os participantes. Uma camada adicional de segurança é feita através do uso de assinatura de mensagens, para isso foi implementada uma autoridade certificadora onde são armazenadas as chaves públicas dos participantes, dessa forma permitindo a verificação da origem das mensagens trocadas entre os participantes e impedindo, por exemplo, que algum cliente se passe por outro.
+O objetivo desse trabalho é implementar uma simulação simples de um cenário de mineração de criptomoedas utilizando o modelo Publish/Subscribe para a comunicação entre os participantes. Uma camada adicional de segurança é feita através do uso de assinatura de mensagens, para isso foi implementada uma autoridade certificadora onde são armazenadas as chaves públicas dos participantes, dessa forma permitindo a verificação da origem das mensagens trocadas entre os participantes e impedindo, por exemplo, que algum participante se passe por outro.
 
 # Requisitos e Execução do código
 
