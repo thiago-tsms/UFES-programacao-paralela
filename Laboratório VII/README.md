@@ -10,7 +10,7 @@ assimétricas, criptografia e descriptografia, assinatura e geração de certifi
 
 # Integrantes
 
-* ... - ... - Thiago ...
+* 2022230977 - Mestrado - Thiago da Silva Meireles de Souza
 * 2022241702 - Doutorado - Vitor Fontana Zanotelli 
 
 # Introdução
