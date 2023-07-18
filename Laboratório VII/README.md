@@ -16,3 +16,21 @@ assimétricas, criptografia e descriptografia, assinatura e geração de certifi
 # Introdução
 
 Teste
+
+# Requisitos e Execução do código
+
+Requisitos: python e pip instalados
+
+Para executar o ambiente:
+
+* criar ambiente: python -m venv .venv
+* ativar ambiente: source .venv/bin/activate
+* configurar ambiente: pip install -r requirements.txt
+
+# Detalhes de Implementação 
+
+...
+
+# Resultados e Discussões
+
+...
