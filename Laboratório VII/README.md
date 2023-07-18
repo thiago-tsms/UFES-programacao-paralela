@@ -1,4 +1,4 @@
-# Laboratório 7 - Assinaturas Digitais
+# Laboratório VII - Assinaturas Digitais
 
 Objetivos
 * Reimplementar o protótipo desenvolvido no Laboratório VI, considerando aspectos de Assinatura
