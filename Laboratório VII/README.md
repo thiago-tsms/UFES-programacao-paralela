@@ -34,6 +34,11 @@ As bibliotecas principais utilizadas para esse trabalho são:
 * [cryptography](https://pypi.org/project/cryptography/): funções de criptografia e hash para a assinatura de mensagens;
 * [paho-mqtt](https://pypi.org/project/paho-mqtt/): client para o mqtt.
 
+Para executar o trabalho realize os passos da seção anterior e em seguida execute em janelas do terminal distintas:
+
+* certificador.py: inicializa a autoridade certificadora;
+* execucao.py: inicializa os participantes e a simulação de mineração. 
+
 # Resultados e Discussões
 
 ...
