@@ -27,6 +27,16 @@ Para executar o ambiente:
 * ativar ambiente: source .venv/bin/activate
 * configurar ambiente: pip install -r requirements.txt
 
+
+Para Execução:
+
+* python certificador.py <número de clientes>
+* python execução.py <número de clientes> (executano n vezes)
+
+* É necessário especificar no broker que o tamanho das mensagens sejam maiores, foi especificado 100mb para essa implementação.
+* Video de execução: https://drive.google.com/file/d/1sjs8azsLjdpPOwvnjiCp4Xigw6yTlnkm/view?usp=sharing
+
+
 Para executar o trabalho, após realizar os passos anteriores, execute em janelas do terminal distintas:
 
 * certificador.py: inicializa a autoridade certificadora;
