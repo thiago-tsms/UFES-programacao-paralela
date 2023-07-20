@@ -139,6 +139,6 @@ Para executar o ambiente:
     <li>estar com broker rodando</li>
 </ul>
 
-executando programa: python main.py <agregador(1)/ clientes(0)> <grupo> <número de clientes> <número máximo de rounds> <meta de acuracia float(0-1)>
-executando treinamento (use o script): sh run.sh <número de clientes (em cada um dos grupos)> <máximo de rounds> <meta de acuracia float(0-1)>
-executando esperimento: sh run_all.sh
+* executando programa: python main.py <agregador(1)/ clientes(0)> <grupo> <número de clientes> <número máximo de rounds> <meta de acuracia float(0-1)>
+* executando treinamento (use o script): sh run.sh <número de clientes (em cada um dos grupos)> <máximo de rounds> <meta de acuracia float(0-1)>
+* executando esperimento: sh run_all.sh
